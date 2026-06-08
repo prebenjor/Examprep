@@ -5,6 +5,12 @@ export interface Choice {
   text: string
 }
 
+export interface MatchPair {
+  id: string
+  item: string
+  target: string
+}
+
 export interface Question {
   id: string
   number: number
@@ -14,6 +20,7 @@ export interface Question {
   choices: Choice[]
   correctAnswers: string[]
   explanation: string
+  matchPairs?: MatchPair[]
   image?: string
   needsReview?: boolean
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isCorrect, scoreQuestions, shuffleQuestions } from './quiz'
+import { getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './quiz'
 import type { Question } from '../types'
 
 const bank: Question[] = [
@@ -32,6 +32,10 @@ const bank: Question[] = [
     choices: [{ id: 'A', text: 'A' }, { id: 'B', text: 'B' }],
     correctAnswers: ['A', 'B'],
     explanation: 'Both',
+    matchPairs: [
+      { id: 'A', item: 'Alpha', target: 'First' },
+      { id: 'B', item: 'Beta', target: 'Second' },
+    ],
   },
 ]
 
@@ -44,6 +48,16 @@ describe('quiz scoring', () => {
   it('does not award partial credit', () => {
     expect(isCorrect(bank[1], ['A'])).toBe(false)
     expect(isCorrect(bank[1], ['A', 'B', 'C'])).toBe(false)
+  })
+
+  it('scores matching placements and derives source-answer pairs', () => {
+    expect(isCorrect(bank[2], ['B=B', 'A=A'])).toBe(true)
+    expect(isCorrect(bank[2], ['A=B', 'B=A'])).toBe(false)
+    expect(getMatchPairs({
+      ...bank[2],
+      matchPairs: undefined,
+      explanation: 'Source answer: Alpha: First; Beta: Second.',
+    })).toHaveLength(2)
   })
 
   it('tracks correct, incorrect, and unanswered independently', () => {

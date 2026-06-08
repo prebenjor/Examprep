@@ -1,6 +1,31 @@
-import type { AttemptAnswer, Question } from '../types'
+import type { AttemptAnswer, MatchPair, Question } from '../types'
+
+export function getMatchPairs(question: Question): MatchPair[] {
+  if (question.type !== 'matching') return []
+  if (question.matchPairs?.length) return question.matchPairs
+
+  const sourceAnswer = question.explanation.replace(/^Source answer:\s*/i, '').replace(/\.$/, '')
+  const entries = sourceAnswer.split(';').map((entry) => entry.trim()).filter(Boolean)
+  if (entries.length < 2 || entries.some((entry) => !entry.includes(':'))) return []
+
+  return entries.map((entry, index) => {
+    const separator = entry.indexOf(':')
+    return {
+      id: `M${index + 1}`,
+      item: entry.slice(0, separator).trim(),
+      target: entry.slice(separator + 1).trim(),
+    }
+  })
+}
 
 export function isCorrect(question: Question, selected: string[]): boolean {
+  const matchPairs = getMatchPairs(question)
+  if (matchPairs.length) {
+    const expected = matchPairs.map((pair) => `${pair.id}=${pair.id}`).sort()
+    const actual = [...selected].sort()
+    return expected.length === actual.length &&
+      expected.every((answer, index) => answer === actual[index])
+  }
   if (selected.length !== question.correctAnswers.length) return false
   const expected = [...question.correctAnswers].sort()
   const actual = [...selected].sort()

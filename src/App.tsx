@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { questions } from './data/questions'
-import { formatDuration, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
+import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
 import { clearState, loadState, saveState } from './lib/storage'
 import type { AppState, Attempt, AttemptAnswer, Question } from './types'
 
@@ -90,6 +90,15 @@ function App() {
             : [...existing, choiceId]
       return { ...current, answers: { ...current.answers, [question.id]: next } }
     })
+  }
+
+  const setQuestionAnswers = (question: Question, answers: string[]) => {
+    if (!session || session.submitted.includes(question.id)) return
+    setSession((current) =>
+      current
+        ? { ...current, answers: { ...current.answers, [question.id]: answers } }
+        : current,
+    )
   }
 
   const submitPracticeAnswer = () => {
@@ -211,6 +220,7 @@ function App() {
             session={session}
             bookmarks={state.bookmarks}
             onAnswer={toggleAnswer}
+            onSetAnswers={setQuestionAnswers}
             onBookmark={toggleBookmark}
             onSubmit={submitPracticeAnswer}
             onNavigate={(index) => setSession({ ...session, index })}
@@ -346,10 +356,11 @@ function ExamSetup({ size, timed, onSize, onTimed, onStart, onCancel }: {
   )
 }
 
-function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavigate, onFinish, onExit }: {
+function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, onSubmit, onNavigate, onFinish, onExit }: {
   session: Session
   bookmarks: string[]
   onAnswer: (question: Question, choiceId: string) => void
+  onSetAnswers: (question: Question, answers: string[]) => void
   onBookmark: (id: string) => void
   onSubmit: () => void
   onNavigate: (index: number) => void
@@ -360,6 +371,7 @@ function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavi
   const selected = session.answers[question.id] ?? []
   const submitted = session.submitted.includes(question.id)
   const correct = submitted && isCorrect(question, selected)
+  const matchPairs = getMatchPairs(question)
   return (
     <div className="quiz-layout">
       <aside className="question-nav">
@@ -378,11 +390,20 @@ function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavi
           <button className={`bookmark ${bookmarks.includes(question.id) ? 'saved' : ''}`} onClick={() => onBookmark(question.id)}>{bookmarks.includes(question.id) ? '★ Saved' : '☆ Bookmark'}</button>
         </div>
         <article className="question-card">
-          <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : question.type === 'matching' ? 'Matching set' : 'Select one answer'}</span></div>
+          <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : matchPairs.length ? 'Drag each item to its match' : 'Select one answer'}</span></div>
           <h1>{question.prompt}</h1>
           {question.needsReview && <div className="review-note">Source note: this item contains wording or answer ambiguity and is preserved for review.</div>}
           {question.image && <img className="question-image" src={`${import.meta.env.BASE_URL}${question.image}`} alt={`Source screenshot for question ${question.number}`} />}
-          <div className="answers">
+          {matchPairs.length ? (
+            <MatchingBoard
+              key={question.id}
+              pairs={matchPairs}
+              answers={selected}
+              disabled={submitted}
+              reveal={submitted}
+              onChange={(answers) => onSetAnswers(question, answers)}
+            />
+          ) : <div className="answers">
             {question.choices.map((choice) => {
               const chosen = selected.includes(choice.id)
               const revealCorrect = submitted && question.correctAnswers.includes(choice.id)
@@ -399,7 +420,7 @@ function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavi
                 </button>
               )
             })}
-          </div>
+          </div>}
           {submitted && (
             <div className={`feedback ${correct ? 'good' : 'bad'}`}>
               <strong>{correct ? 'Correct' : 'Not quite'}</strong>
@@ -417,6 +438,126 @@ function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavi
           </div>
         </div>
       </section>
+    </div>
+  )
+}
+
+function MatchingBoard({
+  pairs,
+  answers,
+  disabled,
+  reveal,
+  onChange,
+}: {
+  pairs: ReturnType<typeof getMatchPairs>
+  answers: string[]
+  disabled: boolean
+  reveal: boolean
+  onChange: (answers: string[]) => void
+}) {
+  const [activeItem, setActiveItem] = useState<string | null>(null)
+  const [itemOrder] = useState(() => shuffleQuestions(pairs))
+  const assignments = new Map(
+    answers
+      .map((answer) => answer.split('='))
+      .filter((parts) => parts.length === 2)
+      .map(([targetId, itemId]) => [targetId, itemId]),
+  )
+  const assignedItems = new Set(assignments.values())
+  const availableItems = itemOrder.filter((pair) => !assignedItems.has(pair.id))
+
+  const commit = (next: Map<string, string>) => {
+    onChange([...next].map(([target, item]) => `${target}=${item}`))
+  }
+
+  const assign = (targetId: string, itemId: string) => {
+    if (disabled || !pairs.some((pair) => pair.id === itemId)) return
+    const next = new Map(assignments)
+    for (const [existingTarget, existingItem] of next) {
+      if (existingItem === itemId || existingTarget === targetId) next.delete(existingTarget)
+    }
+    next.set(targetId, itemId)
+    commit(next)
+    setActiveItem(null)
+  }
+
+  const remove = (targetId: string) => {
+    if (disabled) return
+    const next = new Map(assignments)
+    next.delete(targetId)
+    commit(next)
+  }
+
+  return (
+    <div className="matching-board">
+      <div className="matching-instructions">
+        <strong>Items to match</strong>
+        <span>Drag an item, or select it and then select a drop zone.</span>
+      </div>
+      <div className="matching-pool" aria-label="Items to match">
+        {availableItems.map((pair) => (
+          <button
+            type="button"
+            key={pair.id}
+            className={`drag-item ${activeItem === pair.id ? 'active' : ''}`}
+            draggable={!disabled}
+            onDragStart={(event) => event.dataTransfer.setData('text/plain', pair.id)}
+            onClick={() => !disabled && setActiveItem(activeItem === pair.id ? null : pair.id)}
+            disabled={disabled}
+          >
+            <span className="drag-handle" aria-hidden="true">::</span>
+            {pair.item}
+          </button>
+        ))}
+        {!availableItems.length && <span className="pool-complete">All items placed</span>}
+      </div>
+      <div className="drop-list">
+        {pairs.map((target) => {
+          const itemId = assignments.get(target.id)
+          const item = pairs.find((pair) => pair.id === itemId)
+          const placementCorrect = itemId === target.id
+          return (
+            <div
+              key={target.id}
+              className={`drop-row ${item ? 'filled' : ''} ${reveal ? placementCorrect ? 'correct' : 'wrong' : ''}`}
+              onDragOver={(event) => {
+                if (!disabled) event.preventDefault()
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                assign(target.id, event.dataTransfer.getData('text/plain'))
+              }}
+            >
+              <div className="drop-target-label">{target.target}</div>
+              <button
+                type="button"
+                className="drop-zone"
+                onClick={() => {
+                  if (activeItem) assign(target.id, activeItem)
+                  else if (item) remove(target.id)
+                }}
+                disabled={disabled}
+                aria-label={item ? `${item.item}, matched to ${target.target}` : `Drop item for ${target.target}`}
+              >
+                {item ? (
+                  <>
+                    <span className="drag-handle" aria-hidden="true">::</span>
+                    <span>{item.item}</span>
+                    {!disabled && <small>Remove</small>}
+                  </>
+                ) : (
+                  <span>{activeItem ? 'Place selected item' : 'Drop here'}</span>
+                )}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      {!disabled && answers.length > 0 && (
+        <button type="button" className="text-button matching-reset" onClick={() => onChange([])}>
+          Reset matches
+        </button>
+      )}
     </div>
   )
 }
@@ -462,12 +603,33 @@ function Results({ attempt, passingScore, filter, onFilter, onHome, onRetry }: {
         {visible.map((question) => {
           const selected = answerMap.get(question.id) ?? []
           const correct = isCorrect(question, selected)
-          return <article className="review-item" key={question.id}><span className={`review-status ${selected.length === 0 ? 'blank' : correct ? 'right' : 'miss'}`}>{selected.length === 0 ? '—' : correct ? '✓' : '×'}</span><div><strong>Question {question.number}: {question.prompt}</strong><p>Your answer: {selected.length ? selected.map((id) => question.choices.find((choice) => choice.id === id)?.text).join('; ') : 'Unanswered'}</p>{!correct && <p className="correct-answer">Correct: {question.correctAnswers.map((id) => question.choices.find((choice) => choice.id === id)?.text).join('; ')}</p>}<small>{question.explanation}</small></div></article>
+          return <article className="review-item" key={question.id}><span className={`review-status ${selected.length === 0 ? 'blank' : correct ? 'right' : 'miss'}`}>{selected.length === 0 ? '—' : correct ? '✓' : '×'}</span><div><strong>Question {question.number}: {question.prompt}</strong><p>Your answer: {selected.length ? formatResponse(question, selected) : 'Unanswered'}</p>{!correct && <p className="correct-answer">Correct: {formatResponse(question, question.correctAnswers, true)}</p>}<small>{question.explanation}</small></div></article>
         })}
         {!visible.length && <div className="empty-state"><strong>No questions in this filter</strong></div>}
       </section>
     </div>
   )
+}
+
+function formatResponse(question: Question, selected: string[], correctOnly = false): string {
+  const pairs = getMatchPairs(question)
+  if (pairs.length) {
+    const assignments = correctOnly
+      ? new Map(pairs.map((pair) => [pair.id, pair.id]))
+      : new Map(selected.map((answer) => answer.split('=') as [string, string]))
+    return pairs
+      .map((target) => {
+        const item = pairs.find((pair) => pair.id === assignments.get(target.id))
+        return item ? `${target.target}: ${item.item}` : `${target.target}: Unmatched`
+      })
+      .join('; ')
+  }
+
+  const answerIds = correctOnly ? question.correctAnswers : selected
+  return answerIds
+    .map((id) => question.choices.find((choice) => choice.id === id)?.text)
+    .filter(Boolean)
+    .join('; ')
 }
 
 export default App

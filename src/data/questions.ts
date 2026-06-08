@@ -28,7 +28,7 @@ const structuredQuestions: Question[] = [
     category: 'Service Mapping',
     type: 'matching',
     prompt:
-      'Match each application service type to its best description. Select all four service types represented by the descriptions.',
+      'Match each application service type to its best description.',
     choices: choices({
       A: 'Service Mapping (Top-down): pattern-based and precise for mission-critical services',
       B: 'Tag-Based: suited to cloud, container, and virtual machine environments',
@@ -36,6 +36,28 @@ const structuredQuestions: Question[] = [
       D: 'Dynamic CI Group: uses filters and CMDB queries for simple groupings',
     }),
     correctAnswers: ['A', 'B', 'C', 'D'],
+    matchPairs: [
+      {
+        id: 'A',
+        item: 'Service Mapping (Top-down)',
+        target: 'Pattern-based and precise for mission-critical services',
+      },
+      {
+        id: 'B',
+        item: 'Tag-Based',
+        target: 'Suited to cloud, container, and virtual machine environments',
+      },
+      {
+        id: 'C',
+        item: 'Service Mapping (Connection Suggestion)',
+        target: 'Uses fingerprinting for custom applications',
+      },
+      {
+        id: 'D',
+        item: 'Dynamic CI Group',
+        target: 'Uses filters and CMDB queries for simple groupings',
+      },
+    ],
     explanation:
       'The source order is Top-down, Tag-Based, Connection Suggestion, then Dynamic CI Group.',
   },

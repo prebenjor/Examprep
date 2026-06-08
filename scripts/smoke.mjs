@@ -23,6 +23,20 @@ try {
   await desktop.getByText('Correct', { exact: true }).waitFor()
   await desktop.getByRole('button', { name: 'Next' }).click()
   await desktop.getByText('QUESTION 2').waitFor()
+  await desktop.getByRole('button', { name: /Service Mapping \(Top-down\)/ }).dragTo(
+    desktop.getByRole('button', { name: /Drop item for Pattern-based/ }),
+  )
+  const remainingMatches = [
+    ['Tag-Based', /Drop item for Suited to cloud/],
+    ['Service Mapping (Connection Suggestion)', /Drop item for Uses fingerprinting/],
+    ['Dynamic CI Group', /Drop item for Uses filters/],
+  ]
+  for (const [item, target] of remainingMatches) {
+    await desktop.getByRole('button', { name: item, exact: true }).click()
+    await desktop.getByRole('button', { name: target }).click()
+  }
+  await desktop.getByRole('button', { name: 'Check answer' }).click()
+  await desktop.getByText('Correct', { exact: true }).waitFor()
   await desktop.locator('.question-grid button').nth(22).click()
   await desktop.getByText('QUESTION 23').waitFor()
   await desktop.locator('.question-image').waitFor()
@@ -48,6 +62,10 @@ try {
   if (overflows) throw new Error('Mobile layout has horizontal overflow.')
   await mobile.getByRole('button', { name: 'Start practice' }).click()
   await mobile.getByText('QUESTION 1').waitFor()
+  await mobile.locator('.question-grid button').nth(1).click()
+  await mobile.getByRole('button', { name: 'Tag-Based', exact: true }).click()
+  await mobile.getByRole('button', { name: /Drop item for Suited to cloud/ }).click()
+  await mobile.getByRole('button', { name: /Tag-Based, matched to Suited to cloud/ }).waitFor()
 
   console.log('Browser smoke test passed for practice, mock exam, and 390px mobile layout.')
 } finally {
