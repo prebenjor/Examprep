@@ -1,9 +1,10 @@
 import type { Question } from '../types'
+import { screenshotQuestions } from './screenshotQuestions'
 
 const choices = (values: Record<string, string>) =>
   Object.entries(values).map(([id, text]) => ({ id, text }))
 
-export const questions: Question[] = [
+const structuredQuestions: Question[] = [
   {
     id: 'cmdb-001',
     number: 1,
@@ -369,4 +370,9 @@ export const questions: Question[] = [
     explanation:
       'New classes should be modeled in CI Class Manager under the correct parent to inherit the appropriate structure and behavior.',
   },
+]
+
+export const questions: Question[] = [
+  ...structuredQuestions,
+  ...screenshotQuestions,
 ]

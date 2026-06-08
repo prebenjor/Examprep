@@ -15,6 +15,7 @@ const browser = await chromium.launch({ headless: true, executablePath: edgePath
 try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
   await desktop.goto(baseUrl)
+  await desktop.getByText('192', { exact: true }).first().waitFor()
   await desktop.getByRole('button', { name: 'Start practice' }).click()
   await desktop.getByRole('button', { name: /Managed by Group/ }).click()
   await desktop.getByRole('button', { name: /Support Group/ }).click()
@@ -22,6 +23,13 @@ try {
   await desktop.getByText('Correct', { exact: true }).waitFor()
   await desktop.getByRole('button', { name: 'Next' }).click()
   await desktop.getByText('QUESTION 2').waitFor()
+  await desktop.locator('.question-grid button').nth(22).click()
+  await desktop.getByText('QUESTION 23').waitFor()
+  await desktop.locator('.question-image').waitFor()
+  const sourceImageLoaded = await desktop.locator('.question-image').evaluate(
+    (image) => image.complete && image.naturalWidth > 0,
+  )
+  if (!sourceImageLoaded) throw new Error('Question 23 source screenshot did not load.')
   await desktop.getByRole('button', { name: 'CMDB Prep home' }).click()
   await desktop.getByRole('button', { name: 'Mock exam', exact: true }).first().click()
   await desktop.getByRole('heading', { name: 'Build your session' }).waitFor()

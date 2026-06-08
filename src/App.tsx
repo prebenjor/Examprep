@@ -381,6 +381,7 @@ function QuizScreen({ session, bookmarks, onAnswer, onBookmark, onSubmit, onNavi
           <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : question.type === 'matching' ? 'Matching set' : 'Select one answer'}</span></div>
           <h1>{question.prompt}</h1>
           {question.needsReview && <div className="review-note">Source note: this item contains wording or answer ambiguity and is preserved for review.</div>}
+          {question.image && <img className="question-image" src={`${import.meta.env.BASE_URL}${question.image}`} alt={`Source screenshot for question ${question.number}`} />}
           <div className="answers">
             {question.choices.map((choice) => {
               const chosen = selected.includes(choice.id)

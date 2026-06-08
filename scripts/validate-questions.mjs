@@ -1,13 +1,17 @@
 import fs from 'node:fs'
 
-const source = fs.readFileSync(new URL('../src/data/questions.ts', import.meta.url), 'utf8')
-const questionBlocks = [...source.matchAll(/\{\n    id: '([^']+)',([\s\S]*?)\n  \},/g)]
+const structuredSource = fs.readFileSync(new URL('../src/data/questions.ts', import.meta.url), 'utf8')
+const generatedSource = fs.readFileSync(new URL('../src/data/screenshotQuestions.ts', import.meta.url), 'utf8')
+const structuredBlocks = [...structuredSource.matchAll(/\{\n    id: '([^']+)',([\s\S]*?)\n  \},/g)]
+const generatedQuestions = JSON.parse(generatedSource.slice(generatedSource.indexOf('= [') + 2))
 const errors = []
 const ids = new Set()
 
-if (questionBlocks.length === 0) errors.push('No questions found.')
+if (structuredBlocks.length + generatedQuestions.length !== 192) {
+  errors.push(`Expected 192 questions, found ${structuredBlocks.length + generatedQuestions.length}.`)
+}
 
-for (const [, id, block] of questionBlocks) {
+for (const [, id, block] of structuredBlocks) {
   if (ids.has(id)) errors.push(`Duplicate question id: ${id}`)
   ids.add(id)
   for (const field of ['number:', 'category:', 'type:', 'prompt:', 'choices:', 'correctAnswers:', 'explanation:']) {
@@ -26,9 +30,27 @@ for (const [, id, block] of questionBlocks) {
   }
 }
 
+for (const question of generatedQuestions) {
+  if (ids.has(question.id)) errors.push(`Duplicate question id: ${question.id}`)
+  ids.add(question.id)
+  for (const field of ['number', 'category', 'type', 'prompt', 'choices', 'correctAnswers', 'explanation']) {
+    if (!question[field] && question[field] !== 0) errors.push(`${question.id} is missing ${field}`)
+  }
+  const choiceIds = new Set(question.choices.map((choice) => choice.id))
+  if (choiceIds.size !== question.choices.length) errors.push(`${question.id} has duplicate choice IDs`)
+  if (question.choices.some((choice) => !choice.text.trim())) errors.push(`${question.id} has an empty choice`)
+  for (const answer of question.correctAnswers) {
+    if (!choiceIds.has(answer)) errors.push(`${question.id} references missing choice ${answer}`)
+  }
+  if (question.image) {
+    const imagePath = new URL(`../public/${question.image}`, import.meta.url)
+    if (!fs.existsSync(imagePath)) errors.push(`${question.id} references missing image ${question.image}`)
+  }
+}
+
 if (errors.length) {
   console.error(errors.join('\n'))
   process.exit(1)
 }
 
-console.log(`Validated ${questionBlocks.length} questions with unique IDs and valid answer references.`)
+console.log(`Validated ${ids.size} questions with unique IDs, valid answers, and source images.`)

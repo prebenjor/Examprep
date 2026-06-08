@@ -34,7 +34,7 @@ Each entry requires:
 
 Run `npm run validate:questions` after changing the bank. The validator rejects duplicate IDs, missing fields, missing choices, and answers that do not reference a choice.
 
-The initial bank contains the 22 questions whose full prompts, choices, answers, and explanations were recoverable as structured text from the supplied Word document. Screenshot-only material was not guessed from incomplete answer-key fragments. Ambiguous source items are marked `needsReview`.
+The bank contains all 192 source questions: 22 structured questions and 170 screenshot-backed questions. The screenshots are retained in `public/questions` so OCR text can always be checked against the exact source. Ambiguous source items are marked `needsReview`.
 
 ## Progress and privacy
 
