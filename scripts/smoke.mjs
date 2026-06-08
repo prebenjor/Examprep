@@ -26,10 +26,14 @@ try {
   await desktop.locator('.question-grid button').nth(22).click()
   await desktop.getByText('QUESTION 23').waitFor()
   await desktop.locator('.question-image').waitFor()
-  const sourceImageLoaded = await desktop.locator('.question-image').evaluate(
-    (image) => image.complete && image.naturalWidth > 0,
+  await desktop.waitForFunction(
+    () => {
+      const image = document.querySelector('.question-image')
+      return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0
+    },
+    undefined,
+    { timeout: 15000 },
   )
-  if (!sourceImageLoaded) throw new Error('Question 23 source screenshot did not load.')
   await desktop.getByRole('button', { name: 'CMDB Prep home' }).click()
   await desktop.getByRole('button', { name: 'Mock exam', exact: true }).first().click()
   await desktop.getByRole('heading', { name: 'Build your session' }).waitFor()
