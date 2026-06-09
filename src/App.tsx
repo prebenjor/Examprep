@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { questions } from './data/questions'
 import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
-import { clearState, loadState, saveState } from './lib/storage'
+import { clearState, loadState, PASSING_SCORE, saveState } from './lib/storage'
 import type { AppState, Attempt, AttemptAnswer, Question } from './types'
 
-type Screen = 'dashboard' | 'practice' | 'setup' | 'exam' | 'results'
+type Screen = 'dashboard' | 'practice' | 'setup' | 'exam' | 'session-review' | 'results'
 
 interface Session {
   mode: 'practice' | 'exam'
@@ -15,6 +15,7 @@ interface Session {
   startedAt: number
   secondsLeft: number | null
   submitted: string[]
+  markedForReview: string[]
 }
 
 const initialSession = (mode: Session['mode'], sessionQuestions: Question[], timer: number | null): Session => ({
@@ -25,6 +26,7 @@ const initialSession = (mode: Session['mode'], sessionQuestions: Question[], tim
   startedAt: Date.now(),
   secondsLeft: timer,
   submitted: [],
+  markedForReview: [],
 })
 
 function App() {
@@ -108,6 +110,27 @@ function App() {
     setSession({ ...session, submitted: [...session.submitted, question.id] })
   }
 
+  const changePracticeAnswer = (questionId: string) => {
+    setSession((current) =>
+      current
+        ? {
+            ...current,
+            submitted: current.submitted.filter((id) => id !== questionId),
+          }
+        : current,
+    )
+  }
+
+  const toggleMarkedForReview = (questionId: string) => {
+    setSession((current) => {
+      if (!current) return current
+      const markedForReview = current.markedForReview.includes(questionId)
+        ? current.markedForReview.filter((id) => id !== questionId)
+        : [...current.markedForReview, questionId]
+      return { ...current, markedForReview }
+    })
+  }
+
   const toggleBookmark = (questionId: string) => {
     updateState((current) => ({
       ...current,
@@ -133,6 +156,7 @@ function App() {
       durationSeconds: Math.max(0, Math.round((now - session.startedAt) / 1000)),
       questionIds: session.questions.map((question) => question.id),
       answers: answerList,
+      markedQuestionIds: session.markedForReview,
       ...scored,
     }
     setState((current) => ({
@@ -148,7 +172,7 @@ function App() {
   }, [session])
 
   useEffect(() => {
-    if (screen !== 'exam' || !session || session.secondsLeft === null) return
+    if ((screen !== 'exam' && screen !== 'session-review') || !session || session.secondsLeft === null) return
     const timerId = window.setTimeout(() => {
       if (session.secondsLeft === 1) {
         finishSession()
@@ -201,7 +225,7 @@ function App() {
             onRetry={() => startPractice(true)}
             onReset={() => {
               clearState()
-              setState({ attempts: [], bookmarks: [], completedQuestionIds: [], theme: state.theme, passingScore: 70 })
+              setState({ attempts: [], bookmarks: [], completedQuestionIds: [], theme: state.theme, passingScore: PASSING_SCORE })
             }}
           />
         )}
@@ -211,6 +235,7 @@ function App() {
             timed={timed}
             onSize={setExamSize}
             onTimed={setTimed}
+            passingScore={state.passingScore}
             onStart={startExam}
             onCancel={goHome}
           />
@@ -222,10 +247,23 @@ function App() {
             onAnswer={toggleAnswer}
             onSetAnswers={setQuestionAnswers}
             onBookmark={toggleBookmark}
+            onToggleReview={toggleMarkedForReview}
             onSubmit={submitPracticeAnswer}
+            onChangeAnswer={changePracticeAnswer}
             onNavigate={(index) => setSession({ ...session, index })}
-            onFinish={finishSession}
+            onFinish={() => setScreen('session-review')}
             onExit={goHome}
+          />
+        )}
+        {screen === 'session-review' && session && (
+          <SessionReview
+            session={session}
+            onBack={() => setScreen(session.mode === 'exam' ? 'exam' : 'practice')}
+            onQuestion={(index) => {
+              setSession({ ...session, index })
+              setScreen(session.mode === 'exam' ? 'exam' : 'practice')
+            }}
+            onSubmit={finishSession}
           />
         )}
         {screen === 'results' && result && (
@@ -239,7 +277,7 @@ function App() {
           />
         )}
       </main>
-      <footer>Unofficial study aid based on personal CMDB/CSDM notes. Passing score is an app setting, not an official exam rule.</footer>
+      <footer>Unofficial study aid based on personal CMDB/CSDM notes. The app pass mark is 80%, not an official exam rule.</footer>
     </div>
   )
 }
@@ -326,9 +364,10 @@ function Dashboard({
   )
 }
 
-function ExamSetup({ size, timed, onSize, onTimed, onStart, onCancel }: {
+function ExamSetup({ size, timed, passingScore, onSize, onTimed, onStart, onCancel }: {
   size: number
   timed: boolean
+  passingScore: number
   onSize: (size: number) => void
   onTimed: (timed: boolean) => void
   onStart: () => void
@@ -349,20 +388,22 @@ function ExamSetup({ size, timed, onSize, onTimed, onStart, onCancel }: {
           </div>
         </fieldset>
         <label className="toggle-row"><span><strong>Timed exam</strong><small>Allow 90 seconds per question.</small></span><input type="checkbox" checked={timed} onChange={(event) => onTimed(event.target.checked)} /></label>
-        <div className="setup-summary"><span>Questions <strong>{Math.min(size, questions.length)}</strong></span><span>Time <strong>{timed ? `${Math.ceil(Math.min(size, questions.length) * 1.5)} min` : 'Unlimited'}</strong></span><span>Pass mark <strong>70%</strong></span></div>
+        <div className="setup-summary"><span>Questions <strong>{Math.min(size, questions.length)}</strong></span><span>Time <strong>{timed ? `${Math.ceil(Math.min(size, questions.length) * 1.5)} min` : 'Unlimited'}</strong></span><span>Pass mark <strong>{passingScore}%</strong></span></div>
         <button className="primary wide" onClick={onStart}>Start mock exam</button>
       </section>
     </div>
   )
 }
 
-function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, onSubmit, onNavigate, onFinish, onExit }: {
+function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, onToggleReview, onSubmit, onChangeAnswer, onNavigate, onFinish, onExit }: {
   session: Session
   bookmarks: string[]
   onAnswer: (question: Question, choiceId: string) => void
   onSetAnswers: (question: Question, answers: string[]) => void
   onBookmark: (id: string) => void
+  onToggleReview: (id: string) => void
   onSubmit: () => void
+  onChangeAnswer: (id: string) => void
   onNavigate: (index: number) => void
   onFinish: () => void
   onExit: () => void
@@ -378,15 +419,47 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
         <div><span className="eyebrow">{session.mode === 'exam' ? 'MOCK EXAM' : 'PRACTICE'}</span><strong>{session.index + 1} / {session.questions.length}</strong></div>
         <div className="question-grid">
           {session.questions.map((item, index) => (
-            <button key={item.id} className={`${index === session.index ? 'current' : ''} ${(session.answers[item.id]?.length ?? 0) > 0 ? 'answered' : ''}`} onClick={() => onNavigate(index)}>{index + 1}</button>
+            <button
+              key={item.id}
+              className={`${index === session.index ? 'current' : ''} ${(session.answers[item.id]?.length ?? 0) > 0 ? 'answered' : ''} ${session.markedForReview.includes(item.id) ? 'marked-review' : ''}`}
+              onClick={() => onNavigate(index)}
+              aria-label={`Question ${index + 1}${session.markedForReview.includes(item.id) ? ', marked for review' : ''}`}
+            >
+              {index + 1}
+            </button>
           ))}
         </div>
+        <div className="nav-legend">
+          <span><i className="legend-answered" /> Answered</span>
+          <span><i className="legend-review" /> Review</span>
+        </div>
+        {session.markedForReview.length > 0 && (
+          <button
+            className="text-button review-jump"
+            onClick={() => {
+              const nextIndex = session.questions.findIndex(
+                (item, index) => index > session.index && session.markedForReview.includes(item.id),
+              )
+              const firstIndex = session.questions.findIndex((item) => session.markedForReview.includes(item.id))
+              onNavigate(nextIndex >= 0 ? nextIndex : firstIndex)
+            }}
+          >
+            Review marked ({session.markedForReview.length})
+          </button>
+        )}
+        <button className="text-button review-finish-link" onClick={onFinish}>Review & finish</button>
         <button className="text-button" onClick={onExit}>Exit session</button>
       </aside>
       <section className="question-stage">
         <div className="quiz-status">
           <span>{question.category}</span>
           {session.secondsLeft !== null && <strong className={session.secondsLeft < 60 ? 'time-warning' : ''}>{formatDuration(session.secondsLeft)}</strong>}
+          <button
+            className={`review-flag ${session.markedForReview.includes(question.id) ? 'active' : ''}`}
+            onClick={() => onToggleReview(question.id)}
+          >
+            {session.markedForReview.includes(question.id) ? 'Flagged for review' : 'Mark for review'}
+          </button>
           <button className={`bookmark ${bookmarks.includes(question.id) ? 'saved' : ''}`} onClick={() => onBookmark(question.id)}>{bookmarks.includes(question.id) ? '★ Saved' : '☆ Bookmark'}</button>
         </div>
         <article className="question-card">
@@ -438,9 +511,10 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
           <button className="secondary" disabled={session.index === 0} onClick={() => onNavigate(session.index - 1)}>Previous</button>
           <div>
             {session.mode === 'practice' && !submitted && <button className="primary" disabled={!selected.length} onClick={onSubmit}>Check answer</button>}
+            {session.mode === 'practice' && submitted && <button className="secondary" onClick={() => onChangeAnswer(question.id)}>Change answer</button>}
             {session.index < session.questions.length - 1 ? (
               <button className={submitted || session.mode === 'exam' ? 'primary' : 'secondary'} onClick={() => onNavigate(session.index + 1)}>Next</button>
-            ) : <button className="primary" onClick={onFinish}>Finish {session.mode === 'exam' ? 'exam' : 'practice'}</button>}
+            ) : <button className="primary" onClick={onFinish}>Review & finish</button>}
           </div>
         </div>
       </section>
@@ -564,6 +638,95 @@ function MatchingBoard({
           Reset matches
         </button>
       )}
+    </div>
+  )
+}
+
+function SessionReview({
+  session,
+  onBack,
+  onQuestion,
+  onSubmit,
+}: {
+  session: Session
+  onBack: () => void
+  onQuestion: (index: number) => void
+  onSubmit: () => void
+}) {
+  const unanswered = session.questions.filter(
+    (question) => !(session.answers[question.id]?.length > 0),
+  )
+  const marked = session.questions.filter((question) =>
+    session.markedForReview.includes(question.id),
+  )
+  const priorityIds = new Set([...marked, ...unanswered].map((question) => question.id))
+  const priorityQuestions = session.questions.filter((question) => priorityIds.has(question.id))
+
+  return (
+    <div className="page session-review-page">
+      <div className="review-topbar">
+        <button className="back-button" onClick={onBack}>← Return to questions</button>
+        {session.secondsLeft !== null && (
+          <strong className={session.secondsLeft < 60 ? 'time-warning' : ''}>
+            {formatDuration(session.secondsLeft)}
+          </strong>
+        )}
+      </div>
+      <section className="session-review-card">
+        <span className="eyebrow">FINAL REVIEW</span>
+        <h1>Review before submitting</h1>
+        <p>You can return to any question and change your answer before final submission.</p>
+        <div className="review-summary">
+          <article><strong>{session.questions.length - unanswered.length}</strong><small>Answered</small></article>
+          <article><strong>{unanswered.length}</strong><small>Unanswered</small></article>
+          <article><strong>{marked.length}</strong><small>Marked for review</small></article>
+        </div>
+
+        {priorityQuestions.length > 0 ? (
+          <div className="priority-review">
+            <h2>Needs attention</h2>
+            {priorityQuestions.map((question) => {
+              const index = session.questions.findIndex((item) => item.id === question.id)
+              const isMarked = session.markedForReview.includes(question.id)
+              const isUnanswered = !(session.answers[question.id]?.length > 0)
+              return (
+                <button key={question.id} onClick={() => onQuestion(index)}>
+                  <span>Question {index + 1}</span>
+                  <strong>{question.prompt}</strong>
+                  <small>
+                    {[
+                      isMarked ? 'Marked for review' : '',
+                      isUnanswered ? 'Unanswered' : 'Answered',
+                    ].filter(Boolean).join(' · ')}
+                  </small>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="review-ready">
+            <strong>Everything is answered</strong>
+            <span>No questions are currently marked for review.</span>
+          </div>
+        )}
+
+        <div className="review-question-grid" aria-label="All session questions">
+          {session.questions.map((question, index) => (
+            <button
+              key={question.id}
+              className={`${session.answers[question.id]?.length ? 'answered' : ''} ${session.markedForReview.includes(question.id) ? 'marked-review' : ''}`}
+              onClick={() => onQuestion(index)}
+              aria-label={`Edit question ${index + 1}`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+        <div className="review-submit-row">
+          <button className="secondary" onClick={onBack}>Keep reviewing</button>
+          <button className="primary" onClick={onSubmit}>Submit final answers</button>
+        </div>
+      </section>
     </div>
   )
 }

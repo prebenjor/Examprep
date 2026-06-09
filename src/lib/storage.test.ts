@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { clearState, defaultState, loadState, saveState } from './storage'
+import { clearState, defaultState, loadState, PASSING_SCORE, saveState } from './storage'
 
 describe('local storage', () => {
   beforeEach(() => localStorage.clear())
@@ -16,5 +16,14 @@ describe('local storage', () => {
     expect(loadState().bookmarks).toEqual(['cmdb-001'])
     clearState()
     expect(loadState()).toEqual(defaultState)
+  })
+
+  it('uses and migrates to the 80 percent pass mark', () => {
+    expect(PASSING_SCORE).toBe(80)
+    localStorage.setItem(
+      'cmdb-exam-prep-state-v1',
+      JSON.stringify({ ...defaultState, passingScore: 70 }),
+    )
+    expect(loadState().passingScore).toBe(80)
   })
 })

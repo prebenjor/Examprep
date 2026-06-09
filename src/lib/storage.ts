@@ -1,13 +1,14 @@
 import type { AppState } from '../types'
 
 const STORAGE_KEY = 'cmdb-exam-prep-state-v1'
+export const PASSING_SCORE = 80
 
 export const defaultState: AppState = {
   attempts: [],
   bookmarks: [],
   completedQuestionIds: [],
   theme: 'light',
-  passingScore: 70,
+  passingScore: PASSING_SCORE,
 }
 
 export function loadState(): AppState {
@@ -18,6 +19,7 @@ export function loadState(): AppState {
     return {
       ...defaultState,
       ...parsed,
+      passingScore: PASSING_SCORE,
       attempts: Array.isArray(parsed.attempts) ? parsed.attempts : [],
       bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
       completedQuestionIds: Array.isArray(parsed.completedQuestionIds)

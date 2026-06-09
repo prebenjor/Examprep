@@ -1,6 +1,6 @@
 # CMDB / CSDM Exam Prep
 
-A responsive, offline-friendly study app built from the supplied CMDB/CSDM study notes. It provides immediate-feedback practice, randomized mock exams, score percentages, category breakdowns, bookmarks, and device-local history.
+A responsive, offline-friendly study app built from the supplied CMDB/CSDM study notes. It provides immediate-feedback practice, randomized mock exams, score percentages, category breakdowns, bookmarks, review flags, and device-local history. The app pass mark is 80%.
 
 ## Run locally
 
@@ -38,7 +38,7 @@ The bank contains all 192 source questions: 22 structured questions and 170 tran
 
 ## Progress and privacy
 
-Attempts, bookmarks, theme, and completed-question statistics are stored in browser `localStorage`. Data stays on the current device and does not synchronize between browsers or devices.
+Attempts, bookmarks, review flags, theme, and completed-question statistics are stored in browser `localStorage`. Data stays on the current device and does not synchronize between browsers or devices.
 
 The repository and deployed question bank are public.
 

@@ -21,6 +21,16 @@ try {
   await desktop.getByRole('button', { name: /Support Group/ }).click()
   await desktop.getByRole('button', { name: 'Check answer' }).click()
   await desktop.getByText('Correct', { exact: true }).waitFor()
+  await desktop.getByRole('button', { name: 'Mark for review' }).click()
+  await desktop.getByRole('button', { name: 'Change answer' }).click()
+  await desktop.getByRole('button', { name: /Managed by Group/ }).click()
+  await desktop.getByRole('button', { name: 'Check answer' }).click()
+  await desktop.getByText('Not quite', { exact: true }).waitFor()
+  await desktop.getByRole('button', { name: 'Review & finish' }).first().click()
+  await desktop.getByRole('heading', { name: 'Review before submitting' }).waitFor()
+  await desktop.getByText('Marked for review', { exact: true }).first().waitFor()
+  await desktop.getByRole('button', { name: 'Edit question 1', exact: true }).click()
+  await desktop.getByText('QUESTION 1').waitFor()
   await desktop.getByRole('button', { name: 'Next' }).click()
   await desktop.getByText('QUESTION 2').waitFor()
   await desktop.getByRole('button', { name: /Service Mapping \(Top-down\)/ }).dragTo(
@@ -56,8 +66,14 @@ try {
   await desktop.getByRole('button', { name: 'CMDB Prep home' }).click()
   await desktop.getByRole('button', { name: 'Mock exam', exact: true }).first().click()
   await desktop.getByRole('heading', { name: 'Build your session' }).waitFor()
+  await desktop.getByText('80%', { exact: true }).waitFor()
   await desktop.getByRole('button', { name: 'Start mock exam' }).click()
   await desktop.getByText('MOCK EXAM').first().waitFor()
+  await desktop.getByRole('button', { name: 'Mark for review' }).click()
+  await desktop.getByRole('button', { name: 'Review & finish' }).first().click()
+  await desktop.getByRole('heading', { name: 'Review before submitting' }).waitFor()
+  await desktop.getByRole('button', { name: 'Submit final answers' }).click()
+  await desktop.getByText('SESSION COMPLETE', { exact: true }).waitFor()
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } })
   await mobile.goto(baseUrl)
@@ -72,7 +88,7 @@ try {
   await mobile.getByRole('button', { name: /Drop item for Suited to cloud/ }).click()
   await mobile.getByRole('button', { name: /Tag-Based, matched to Suited to cloud/ }).waitFor()
 
-  console.log('Browser smoke test passed for practice, mock exam, and 390px mobile layout.')
+  console.log('Browser smoke test passed for answer changes, review flags, 80% pass mark, mock exam, and 390px mobile layout.')
 } finally {
   await browser.close()
 }
