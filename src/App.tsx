@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { questions } from './data/questions'
+import { createBackup, mergeStates, parseBackup } from './lib/backup'
 import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
-import { clearState, loadState, PASSING_SCORE, saveState } from './lib/storage'
-import type { AppState, Attempt, AttemptAnswer, Question } from './types'
+import { buildQuestionHistory, rankQuestions, selectSmartStudyQuestions } from './lib/smartStudy'
+import { clearState, loadState, PASSING_SCORE, saveState, STATE_VERSION } from './lib/storage'
+import type { AppState, Attempt, AttemptAnswer, ImportSummary, Question, QuestionHistory } from './types'
 
-type Screen = 'dashboard' | 'practice' | 'setup' | 'exam' | 'session-review' | 'results'
+type Screen = 'dashboard' | 'practice' | 'smart' | 'setup' | 'exam' | 'session-review' | 'results' | 'data'
 
 interface Session {
-  mode: 'practice' | 'exam'
+  mode: 'practice' | 'exam' | 'smart'
   questions: Question[]
   answers: Record<string, string[]>
   index: number
@@ -37,6 +39,12 @@ function App() {
   const [examSize, setExamSize] = useState(questions.length)
   const [timed, setTimed] = useState(true)
   const [reviewFilter, setReviewFilter] = useState<'all' | 'incorrect' | 'unanswered'>('all')
+  const [pendingImport, setPendingImport] = useState<{
+    state: AppState
+    summary: ImportSummary
+    fileName: string
+  } | null>(null)
+  const [importError, setImportError] = useState('')
 
   useEffect(() => {
     document.documentElement.dataset.theme = state.theme
@@ -52,7 +60,8 @@ function App() {
     }
   }, [state])
 
-  const updateState = (updater: (current: AppState) => AppState) => setState((current) => updater(current))
+  const updateState = (updater: (current: AppState) => AppState) =>
+    setState((current) => ({ ...updater(current), updatedAt: new Date().toISOString() }))
 
   const startPractice = (retryIncorrect = false) => {
     let selected = questions
@@ -77,6 +86,12 @@ function App() {
     const selected = shuffleQuestions(questions).slice(0, Math.min(examSize, questions.length))
     setSession(initialSession('exam', selected, timed ? selected.length * 90 : null))
     setScreen('exam')
+  }
+
+  const startSmartStudy = () => {
+    const selected = selectSmartStudyQuestions(questions, state, 20)
+    setSession(initialSession('smart', selected, null))
+    setScreen('smart')
   }
 
   const toggleAnswer = (question: Question, choiceId: string) => {
@@ -161,7 +176,8 @@ function App() {
     }
     setState((current) => ({
       ...current,
-      attempts: [attempt, ...current.attempts].slice(0, 30),
+      updatedAt: new Date().toISOString(),
+      attempts: [attempt, ...current.attempts],
       completedQuestionIds: [
         ...new Set([...current.completedQuestionIds, ...attempt.questionIds]),
       ],
@@ -204,10 +220,15 @@ function App() {
           <button className={screen === 'dashboard' ? 'active' : ''} onClick={goHome}>Dashboard</button>
           <button onClick={() => startPractice()}>Practice</button>
           <button onClick={() => setScreen('setup')}>Mock exam</button>
+          <button className={screen === 'data' ? 'active' : ''} onClick={() => setScreen('data')}>Data</button>
         </nav>
         <button
           className="icon-button"
-          onClick={() => updateState((current) => ({ ...current, theme: current.theme === 'light' ? 'dark' : 'light' }))}
+          onClick={() => updateState((current) => ({
+            ...current,
+            preferencesUpdatedAt: new Date().toISOString(),
+            theme: current.theme === 'light' ? 'dark' : 'light',
+          }))}
           aria-label={`Switch to ${state.theme === 'light' ? 'dark' : 'light'} theme`}
         >
           {state.theme === 'light' ? 'Moon' : 'Sun'}
@@ -221,11 +242,49 @@ function App() {
             accuracy={stats.accuracy}
             completed={stats.completed}
             onPractice={() => startPractice()}
+            onSmart={startSmartStudy}
             onExam={() => setScreen('setup')}
+            onData={() => setScreen('data')}
             onRetry={() => startPractice(true)}
             onReset={() => {
               clearState()
-              setState({ attempts: [], bookmarks: [], completedQuestionIds: [], theme: state.theme, passingScore: PASSING_SCORE })
+              setState({
+                version: STATE_VERSION,
+                updatedAt: new Date().toISOString(),
+                preferencesUpdatedAt: new Date().toISOString(),
+                attempts: [],
+                bookmarks: [],
+                completedQuestionIds: [],
+                theme: state.theme,
+                passingScore: PASSING_SCORE,
+              })
+            }}
+          />
+        )}
+        {screen === 'data' && (
+          <DataBackup
+            state={state}
+            pendingImport={pendingImport}
+            error={importError}
+            onBack={goHome}
+            onExport={() => exportProgress(state)}
+            onImport={(text, fileName) => {
+              try {
+                const backup = parseBackup(text)
+                const merged = mergeStates(state, backup.state)
+                setPendingImport({ ...merged, fileName })
+                setImportError('')
+              } catch (error) {
+                setPendingImport(null)
+                setImportError(error instanceof Error ? error.message : 'Could not read this backup.')
+              }
+            }}
+            onCancelImport={() => setPendingImport(null)}
+            onConfirmImport={() => {
+              if (!pendingImport) return
+              setState(pendingImport.state)
+              setPendingImport(null)
+              setImportError('')
             }}
           />
         )}
@@ -240,10 +299,11 @@ function App() {
             onCancel={goHome}
           />
         )}
-        {(screen === 'practice' || screen === 'exam') && session && (
+        {(screen === 'practice' || screen === 'smart' || screen === 'exam') && session && (
           <QuizScreen
             session={session}
             bookmarks={state.bookmarks}
+            questionHistory={buildQuestionHistory(session.questions[session.index], state)}
             onAnswer={toggleAnswer}
             onSetAnswers={setQuestionAnswers}
             onBookmark={toggleBookmark}
@@ -258,10 +318,10 @@ function App() {
         {screen === 'session-review' && session && (
           <SessionReview
             session={session}
-            onBack={() => setScreen(session.mode === 'exam' ? 'exam' : 'practice')}
+            onBack={() => setScreen(session.mode)}
             onQuestion={(index) => {
               setSession({ ...session, index })
-              setScreen(session.mode === 'exam' ? 'exam' : 'practice')
+              setScreen(session.mode)
             }}
             onSubmit={finishSession}
           />
@@ -287,7 +347,9 @@ function Dashboard({
   accuracy,
   completed,
   onPractice,
+  onSmart,
   onExam,
+  onData,
   onRetry,
   onReset,
 }: {
@@ -295,10 +357,22 @@ function Dashboard({
   accuracy: number
   completed: number
   onPractice: () => void
+  onSmart: () => void
   onExam: () => void
+  onData: () => void
   onRetry: () => void
   onReset: () => void
 }) {
+  const ranked = rankQuestions(questions, state)
+  const dueCount = ranked.filter(({ history }) => history.priority >= 400).length
+  const weakCategories = Object.entries(
+    ranked.reduce<Record<string, number>>((acc, { question, history }) => {
+      if (history.latestResult === 'incorrect' || history.latestResult === 'unanswered') {
+        acc[question.category] = (acc[question.category] ?? 0) + 1
+      }
+      return acc
+    }, {}),
+  ).sort((left, right) => right[1] - left[1]).slice(0, 3)
   return (
     <div className="page dashboard">
       <section className="hero-panel">
@@ -330,6 +404,11 @@ function Dashboard({
         <div>
           <div className="section-heading"><div><span className="eyebrow">CHOOSE YOUR MODE</span><h2>How do you want to study?</h2></div></div>
           <div className="mode-grid">
+            <button className="mode-card smart-card" onClick={onSmart}>
+              <span className="mode-art smart-art">20</span>
+              <span><strong>Smart Study</strong><small>{dueCount} questions due. Automatically focuses on weak, stale, flagged, and unseen material.</small></span>
+              <b>Study priorities →</b>
+            </button>
             <button className="mode-card" onClick={onPractice}>
               <span className="mode-art practice-art">01</span>
               <span><strong>Practice mode</strong><small>Immediate feedback and explanations after every answer.</small></span>
@@ -346,6 +425,12 @@ function Dashboard({
               <b>Retry incorrect →</b>
             </button>
           </div>
+          <div className="weak-topics">
+            <div><span className="eyebrow">CURRENT PRIORITIES</span><h2>Weak topics</h2></div>
+            {weakCategories.length ? weakCategories.map(([category, count]) => (
+              <span key={category}><strong>{category}</strong><small>{count} question{count === 1 ? '' : 's'} need attention</small></span>
+            )) : <p>Complete a session to identify weak categories.</p>}
+          </div>
         </div>
         <aside className="history-card">
           <div className="section-heading"><div><span className="eyebrow">RECENT ACTIVITY</span><h2>Your attempts</h2></div></div>
@@ -354,11 +439,87 @@ function Dashboard({
           ) : state.attempts.slice(0, 5).map((attempt) => (
             <div className="attempt-row" key={attempt.id}>
               <span className={`score-dot ${attempt.score >= state.passingScore ? 'pass' : 'fail'}`}>{attempt.score}%</span>
-              <div><strong>{attempt.mode === 'exam' ? 'Mock exam' : 'Practice'}</strong><small>{new Date(attempt.completedAt).toLocaleDateString()} · {attempt.questionIds.length} questions</small></div>
+              <div><strong>{attempt.mode === 'exam' ? 'Mock exam' : attempt.mode === 'smart' ? 'Smart Study' : 'Practice'}</strong><small>{new Date(attempt.completedAt).toLocaleDateString()} · {attempt.questionIds.length} questions</small></div>
             </div>
           ))}
           {state.attempts.length > 0 && <button className="text-button danger" onClick={onReset}>Reset local progress</button>}
+          <button className="text-button" onClick={onData}>Export or import progress</button>
         </aside>
+      </section>
+    </div>
+  )
+}
+
+function DataBackup({
+  state,
+  pendingImport,
+  error,
+  onBack,
+  onExport,
+  onImport,
+  onCancelImport,
+  onConfirmImport,
+}: {
+  state: AppState
+  pendingImport: { state: AppState; summary: ImportSummary; fileName: string } | null
+  error: string
+  onBack: () => void
+  onExport: () => void
+  onImport: (text: string, fileName: string) => void
+  onCancelImport: () => void
+  onConfirmImport: () => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  return (
+    <div className="page narrow-page data-page">
+      <button className="back-button" onClick={onBack}>← Dashboard</button>
+      <section className="setup-card">
+        <span className="eyebrow">DATA & BACKUP</span>
+        <h1>Move progress between devices</h1>
+        <p>Export a small JSON backup on one device, then import it on another. Nothing is uploaded to a server.</p>
+        <div className="backup-stats">
+          <span><strong>{state.attempts.length}</strong> attempts</span>
+          <span><strong>{state.bookmarks.length}</strong> bookmarks</span>
+          <span><strong>{state.completedQuestionIds.length}</strong> completed</span>
+        </div>
+        <div className="backup-actions">
+          <button className="primary" onClick={onExport}>Export progress</button>
+          <button className="secondary" onClick={() => inputRef.current?.click()}>Choose backup to import</button>
+          <input
+            ref={inputRef}
+            className="visually-hidden"
+            type="file"
+            accept=".json,application/json"
+            onChange={async (event) => {
+              const file = event.target.files?.[0]
+              if (file) onImport(await file.text(), file.name)
+              event.target.value = ''
+            }}
+          />
+        </div>
+        {error && <div className="import-message error" role="alert">{error}</div>}
+        {pendingImport && (
+          <div className="import-preview">
+            <span className="eyebrow">IMPORT PREVIEW</span>
+            <h2>{pendingImport.fileName}</h2>
+            <p>Review what will be merged before saving it to this device.</p>
+            <div className="import-summary">
+              <span><strong>+{pendingImport.summary.addedAttempts}</strong> new attempts</span>
+              <span><strong>{pendingImport.summary.duplicateAttempts}</strong> duplicates skipped</span>
+              <span><strong>+{pendingImport.summary.addedBookmarks}</strong> bookmarks</span>
+              <span><strong>+{pendingImport.summary.addedCompletedQuestions}</strong> completed questions</span>
+            </div>
+            <p className="preference-note">
+              {pendingImport.summary.preferencesFrom === 'import'
+                ? 'The imported backup has newer preferences, so its theme will be used.'
+                : 'This device has newer preferences, so its theme will be kept.'}
+            </p>
+            <div className="button-row">
+              <button className="primary" onClick={onConfirmImport}>Merge progress</button>
+              <button className="secondary" onClick={onCancelImport}>Cancel</button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   )
@@ -395,9 +556,27 @@ function ExamSetup({ size, timed, passingScore, onSize, onTimed, onStart, onCanc
   )
 }
 
-function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, onToggleReview, onSubmit, onChangeAnswer, onNavigate, onFinish, onExit }: {
+function QuestionHistorySummary({ history }: { history: QuestionHistory }) {
+  return (
+    <div className="question-history">
+      <div>
+        <span className="eyebrow">WHY THIS QUESTION</span>
+        <strong>{history.priorityReason}</strong>
+      </div>
+      <span><strong>{history.attempts}</strong><small>Attempts</small></span>
+      <span><strong>{history.accuracy}%</strong><small>Accuracy</small></span>
+      <span>
+        <strong>{history.lastAttemptedAt ? new Date(history.lastAttemptedAt).toLocaleDateString() : 'Never'}</strong>
+        <small>Last studied</small>
+      </span>
+    </div>
+  )
+}
+
+function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswers, onBookmark, onToggleReview, onSubmit, onChangeAnswer, onNavigate, onFinish, onExit }: {
   session: Session
   bookmarks: string[]
+  questionHistory: QuestionHistory
   onAnswer: (question: Question, choiceId: string) => void
   onSetAnswers: (question: Question, answers: string[]) => void
   onBookmark: (id: string) => void
@@ -416,7 +595,7 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
   return (
     <div className="quiz-layout">
       <aside className="question-nav">
-        <div><span className="eyebrow">{session.mode === 'exam' ? 'MOCK EXAM' : 'PRACTICE'}</span><strong>{session.index + 1} / {session.questions.length}</strong></div>
+        <div><span className="eyebrow">{session.mode === 'exam' ? 'MOCK EXAM' : session.mode === 'smart' ? 'SMART STUDY' : 'PRACTICE'}</span><strong>{session.index + 1} / {session.questions.length}</strong></div>
         <div className="question-grid">
           {session.questions.map((item, index) => (
             <button
@@ -464,6 +643,7 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
         </div>
         <article className="question-card">
           <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : matchPairs.length ? 'Drag each item to its match' : 'Select one answer'}</span></div>
+          {session.mode === 'smart' && <QuestionHistorySummary history={questionHistory} />}
           <h1>{question.prompt}</h1>
           {question.needsReview && <div className="review-note">Source note: this item contains wording or answer ambiguity and is preserved for review.</div>}
           {matchPairs.length ? (
@@ -510,8 +690,8 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
         <div className="quiz-actions">
           <button className="secondary" disabled={session.index === 0} onClick={() => onNavigate(session.index - 1)}>Previous</button>
           <div>
-            {session.mode === 'practice' && !submitted && <button className="primary" disabled={!selected.length} onClick={onSubmit}>Check answer</button>}
-            {session.mode === 'practice' && submitted && <button className="secondary" onClick={() => onChangeAnswer(question.id)}>Change answer</button>}
+            {session.mode !== 'exam' && !submitted && <button className="primary" disabled={!selected.length} onClick={onSubmit}>Check answer</button>}
+            {session.mode !== 'exam' && submitted && <button className="secondary" onClick={() => onChangeAnswer(question.id)}>Change answer</button>}
             {session.index < session.questions.length - 1 ? (
               <button className={submitted || session.mode === 'exam' ? 'primary' : 'secondary'} onClick={() => onNavigate(session.index + 1)}>Next</button>
             ) : <button className="primary" onClick={onFinish}>Review & finish</button>}
@@ -799,6 +979,19 @@ function formatResponse(question: Question, selected: string[], correctOnly = fa
     .map((id) => question.choices.find((choice) => choice.id === id)?.text)
     .filter(Boolean)
     .join('; ')
+}
+
+function exportProgress(state: AppState): void {
+  const backup = createBackup(state)
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `cmdb-exam-prep-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 export default App

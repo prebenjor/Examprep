@@ -32,7 +32,7 @@ export interface AttemptAnswer {
 
 export interface Attempt {
   id: string
-  mode: 'practice' | 'exam'
+  mode: 'practice' | 'exam' | 'smart'
   startedAt: string
   completedAt: string
   durationSeconds: number
@@ -46,9 +46,41 @@ export interface Attempt {
 }
 
 export interface AppState {
+  version: number
+  updatedAt: string
+  preferencesUpdatedAt: string
   attempts: Attempt[]
   bookmarks: string[]
   completedQuestionIds: string[]
   theme: 'light' | 'dark'
   passingScore: number
+}
+
+export interface ProgressBackup {
+  format: 'cmdb-exam-prep-backup'
+  version: number
+  exportedAt: string
+  state: AppState
+}
+
+export interface ImportSummary {
+  addedAttempts: number
+  duplicateAttempts: number
+  addedBookmarks: number
+  addedCompletedQuestions: number
+  preferencesFrom: 'local' | 'import'
+}
+
+export interface QuestionHistory {
+  questionId: string
+  attempts: number
+  correct: number
+  incorrect: number
+  unanswered: number
+  accuracy: number
+  lastAttemptedAt: string | null
+  latestResult: 'correct' | 'incorrect' | 'unanswered' | 'unseen'
+  markedForReview: boolean
+  priority: number
+  priorityReason: string
 }

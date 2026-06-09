@@ -25,5 +25,8 @@ describe('local storage', () => {
       JSON.stringify({ ...defaultState, passingScore: 70 }),
     )
     expect(loadState().passingScore).toBe(80)
+    expect(loadState().version).toBe(2)
+    expect(loadState().updatedAt).toBe(new Date(0).toISOString())
+    expect(loadState().preferencesUpdatedAt).toBe(new Date(0).toISOString())
   })
 })
