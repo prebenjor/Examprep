@@ -1,4 +1,5 @@
 import type { Question } from '../types'
+import { applyQuestionOverrides } from './questionOverrides'
 import { screenshotQuestions } from './screenshotQuestions'
 
 const choices = (values: Record<string, string>) =>
@@ -396,5 +397,5 @@ const structuredQuestions: Question[] = [
 
 export const questions: Question[] = [
   ...structuredQuestions,
-  ...screenshotQuestions,
+  ...screenshotQuestions.map(applyQuestionOverrides),
 ]

@@ -39,6 +39,11 @@ try {
   await desktop.getByText('Correct', { exact: true }).waitFor()
   await desktop.locator('.question-grid button').nth(22).click()
   await desktop.getByText('QUESTION 23').waitFor()
+  await desktop.getByRole('button', { name: /By using the Principal Class check box/ }).first().waitFor()
+  if (await desktop.locator('.question-source').getAttribute('open')) {
+    throw new Error('Original source should be collapsed by default.')
+  }
+  await desktop.getByText('View original source').click()
   await desktop.locator('.question-image').waitFor()
   await desktop.waitForFunction(
     () => {

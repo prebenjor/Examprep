@@ -393,7 +393,6 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
           <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : matchPairs.length ? 'Drag each item to its match' : 'Select one answer'}</span></div>
           <h1>{question.prompt}</h1>
           {question.needsReview && <div className="review-note">Source note: this item contains wording or answer ambiguity and is preserved for review.</div>}
-          {question.image && <img className="question-image" src={`${import.meta.env.BASE_URL}${question.image}`} alt={`Source screenshot for question ${question.number}`} />}
           {matchPairs.length ? (
             <MatchingBoard
               key={question.id}
@@ -421,6 +420,13 @@ function QuizScreen({ session, bookmarks, onAnswer, onSetAnswers, onBookmark, on
               )
             })}
           </div>}
+          {question.image && (
+            <details className="question-source">
+              <summary>View original source</summary>
+              <p>Use this only to verify the transcribed text.</p>
+              <img className="question-image" src={`${import.meta.env.BASE_URL}${question.image}`} alt={`Original source for question ${question.number}`} loading="lazy" />
+            </details>
+          )}
           {submitted && (
             <div className={`feedback ${correct ? 'good' : 'bad'}`}>
               <strong>{correct ? 'Correct' : 'Not quite'}</strong>

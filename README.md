@@ -34,7 +34,7 @@ Each entry requires:
 
 Run `npm run validate:questions` after changing the bank. The validator rejects duplicate IDs, missing fields, missing choices, and answers that do not reference a choice.
 
-The bank contains all 192 source questions: 22 structured questions and 170 screenshot-backed questions. The screenshots are retained in `public/questions` so OCR text can always be checked against the exact source. Ambiguous source items are marked `needsReview`.
+The bank contains all 192 source questions: 22 structured questions and 170 transcribed questions. Questions and choices are presented as readable text; original screenshots are retained under an optional **View original source** disclosure for verification. Ambiguous source items are marked `needsReview`.
 
 ## Progress and privacy
 
