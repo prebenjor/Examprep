@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import { AppShell, ConfirmDialog, Icon, Notice, type PrimaryDestination } from './components/AppShell'
 import { questions } from './data/questions'
 import { createBackup, mergeStates, parseBackup } from './lib/backup'
 import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
 import { buildQuestionHistory, rankQuestions, selectSmartStudyQuestions } from './lib/smartStudy'
 import { clearState, loadState, PASSING_SCORE, saveState, STATE_VERSION } from './lib/storage'
-import type { AppState, Attempt, AttemptAnswer, ImportSummary, Question, QuestionHistory } from './types'
+import { buildPracticeOrder, buildStudyOverview, defaultBrowseFilters, filterQuestions, type BrowseFilters } from './lib/studyViews'
+import type { AppState, Attempt, AttemptAnswer, ImportSummary, Question, QuestionHistory, QuestionType } from './types'
 
-type Screen = 'dashboard' | 'practice' | 'smart' | 'setup' | 'exam' | 'session-review' | 'results' | 'data'
+type Screen = 'dashboard' | 'browse' | 'question-detail' | 'progress' | 'practice' | 'smart' | 'setup' | 'exam' | 'session-review' | 'results' | 'data'
 
 interface Session {
   mode: 'practice' | 'exam' | 'smart'
@@ -18,6 +20,19 @@ interface Session {
   secondsLeft: number | null
   submitted: string[]
   markedForReview: string[]
+}
+
+interface ConfirmState {
+  title: string
+  message: string
+  confirmLabel: string
+  danger?: boolean
+  action: () => void
+}
+
+interface NoticeState {
+  message: string
+  tone?: 'success' | 'error'
 }
 
 const initialSession = (mode: Session['mode'], sessionQuestions: Question[], timer: number | null): Session => ({
@@ -45,6 +60,11 @@ function App() {
     fileName: string
   } | null>(null)
   const [importError, setImportError] = useState('')
+  const [browseFilters, setBrowseFilters] = useState<BrowseFilters>(defaultBrowseFilters)
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
+  const [answerRevealed, setAnswerRevealed] = useState(false)
+  const [confirm, setConfirm] = useState<ConfirmState | null>(null)
+  const [notice, setNotice] = useState<NoticeState | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = state.theme
@@ -79,6 +99,11 @@ function App() {
       selected = questions.filter((question) => wrongIds.has(question.id))
     }
     setSession(initialSession('practice', selected.length ? selected : questions, null))
+    setScreen('practice')
+  }
+
+  const startPracticeWithQuestions = (sessionQuestions: Question[]) => {
+    setSession(initialSession('practice', sessionQuestions.length ? sessionQuestions : questions, null))
     setScreen('practice')
   }
 
@@ -147,12 +172,14 @@ function App() {
   }
 
   const toggleBookmark = (questionId: string) => {
+    const saved = !state.bookmarks.includes(questionId)
     updateState((current) => ({
       ...current,
       bookmarks: current.bookmarks.includes(questionId)
         ? current.bookmarks.filter((id) => id !== questionId)
         : [...current.bookmarks, questionId],
     }))
+    setNotice({ message: saved ? 'Question bookmarked.' : 'Bookmark removed.' })
   }
 
   const finishSession = useCallback(() => {
@@ -209,33 +236,61 @@ function App() {
     setScreen('dashboard')
   }
 
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <button className="brand" onClick={goHome} aria-label="CMDB Prep home">
-          <span className="brand-mark">C</span>
-          <span><strong>CMDB Prep</strong><small>Practice with purpose</small></span>
-        </button>
-        <nav aria-label="Main navigation">
-          <button className={screen === 'dashboard' ? 'active' : ''} onClick={goHome}>Dashboard</button>
-          <button onClick={() => startPractice()}>Practice</button>
-          <button onClick={() => setScreen('setup')}>Mock exam</button>
-          <button className={screen === 'data' ? 'active' : ''} onClick={() => setScreen('data')}>Data</button>
-        </nav>
-        <button
-          className="icon-button"
-          onClick={() => updateState((current) => ({
-            ...current,
-            preferencesUpdatedAt: new Date().toISOString(),
-            theme: current.theme === 'light' ? 'dark' : 'light',
-          }))}
-          aria-label={`Switch to ${state.theme === 'light' ? 'dark' : 'light'} theme`}
-        >
-          {state.theme === 'light' ? 'Moon' : 'Sun'}
-        </button>
-      </header>
+  const navigate = (destination: PrimaryDestination) => {
+    setSession(null)
+    setResult(null)
+    setSelectedQuestion(null)
+    setAnswerRevealed(false)
+    setScreen(destination)
+  }
 
-      <main>
+  const requestExitSession = () => {
+    setConfirm({
+      title: 'Exit this study session?',
+      message: 'Answers from this unfinished session will not be saved.',
+      confirmLabel: 'Exit session',
+      danger: true,
+      action: goHome,
+    })
+  }
+
+  const requestFinalSubmit = () => {
+    if (!session) return
+    const unanswered = session.questions.filter((question) => !(session.answers[question.id]?.length > 0)).length
+    if (unanswered > 0) {
+      setConfirm({
+        title: 'Submit with unanswered questions?',
+        message: `${unanswered} question${unanswered === 1 ? ' is' : 's are'} unanswered and will count against the final score.`,
+        confirmLabel: 'Submit anyway',
+        action: finishSession,
+      })
+      return
+    }
+    finishSession()
+  }
+
+  const activeDestination: PrimaryDestination =
+    screen === 'browse' || screen === 'question-detail'
+      ? 'browse'
+      : screen === 'progress' || screen === 'results'
+        ? 'progress'
+        : screen === 'data'
+          ? 'data'
+          : 'dashboard'
+  const sessionActive = Boolean(session && ['practice', 'smart', 'exam', 'session-review'].includes(screen))
+
+  return (
+    <AppShell
+      active={activeDestination}
+      theme={state.theme}
+      sessionActive={sessionActive}
+      onNavigate={navigate}
+      onTheme={() => updateState((current) => ({
+        ...current,
+        preferencesUpdatedAt: new Date().toISOString(),
+        theme: current.theme === 'light' ? 'dark' : 'light',
+      }))}
+    >
         {screen === 'dashboard' && (
           <Dashboard
             state={state}
@@ -244,21 +299,68 @@ function App() {
             onPractice={() => startPractice()}
             onSmart={startSmartStudy}
             onExam={() => setScreen('setup')}
-            onData={() => setScreen('data')}
+            onBrowse={() => setScreen('browse')}
+            onProgress={() => setScreen('progress')}
             onRetry={() => startPractice(true)}
             onReset={() => {
-              clearState()
-              setState({
-                version: STATE_VERSION,
-                updatedAt: new Date().toISOString(),
-                preferencesUpdatedAt: new Date().toISOString(),
-                attempts: [],
-                bookmarks: [],
-                completedQuestionIds: [],
-                theme: state.theme,
-                passingScore: PASSING_SCORE,
+              setConfirm({
+                title: 'Reset all local progress?',
+                message: 'Attempts, bookmarks, and study history on this device will be permanently removed.',
+                confirmLabel: 'Reset progress',
+                danger: true,
+                action: () => {
+                  clearState()
+                  setState({
+                    version: STATE_VERSION,
+                    updatedAt: new Date().toISOString(),
+                    preferencesUpdatedAt: new Date().toISOString(),
+                    attempts: [],
+                    bookmarks: [],
+                    completedQuestionIds: [],
+                    theme: state.theme,
+                    passingScore: PASSING_SCORE,
+                  })
+                  setNotice({ message: 'Local progress was reset.' })
+                },
               })
             }}
+          />
+        )}
+        {screen === 'browse' && (
+          <QuestionBrowser
+            state={state}
+            filters={browseFilters}
+            onFilters={setBrowseFilters}
+            onQuestion={(question) => {
+              setSelectedQuestion(question)
+              setAnswerRevealed(false)
+              setScreen('question-detail')
+            }}
+          />
+        )}
+        {screen === 'question-detail' && selectedQuestion && (
+          <QuestionDetail
+            question={selectedQuestion}
+            history={buildQuestionHistory(selectedQuestion, state)}
+            bookmarked={state.bookmarks.includes(selectedQuestion.id)}
+            revealed={answerRevealed}
+            onBack={() => setScreen('browse')}
+            onReveal={() => setAnswerRevealed(true)}
+            onBookmark={() => toggleBookmark(selectedQuestion.id)}
+            onPractice={() => {
+              const filtered = filterQuestions(questions, state, browseFilters).map((item) => item.question)
+              startPracticeWithQuestions(buildPracticeOrder(selectedQuestion, filtered))
+            }}
+          />
+        )}
+        {screen === 'progress' && (
+          <ProgressPage
+            state={state}
+            onBrowseWeak={() => {
+              setBrowseFilters({ ...defaultBrowseFilters, status: 'weak' })
+              setScreen('browse')
+            }}
+            onSmart={startSmartStudy}
           />
         )}
         {screen === 'data' && (
@@ -267,13 +369,17 @@ function App() {
             pendingImport={pendingImport}
             error={importError}
             onBack={goHome}
-            onExport={() => exportProgress(state)}
+            onExport={() => {
+              exportProgress(state)
+              setNotice({ message: 'Progress backup downloaded.' })
+            }}
             onImport={(text, fileName) => {
               try {
                 const backup = parseBackup(text)
                 const merged = mergeStates(state, backup.state)
                 setPendingImport({ ...merged, fileName })
                 setImportError('')
+                setNotice({ message: 'Backup validated. Review the merge summary.' })
               } catch (error) {
                 setPendingImport(null)
                 setImportError(error instanceof Error ? error.message : 'Could not read this backup.')
@@ -282,9 +388,17 @@ function App() {
             onCancelImport={() => setPendingImport(null)}
             onConfirmImport={() => {
               if (!pendingImport) return
-              setState(pendingImport.state)
-              setPendingImport(null)
-              setImportError('')
+              setConfirm({
+                title: 'Merge this backup?',
+                message: 'Unique attempts, bookmarks, and completion history will be added to this device.',
+                confirmLabel: 'Merge progress',
+                action: () => {
+                  setState(pendingImport.state)
+                  setPendingImport(null)
+                  setImportError('')
+                  setNotice({ message: 'Progress merged successfully.' })
+                },
+              })
             }}
           />
         )}
@@ -312,7 +426,7 @@ function App() {
             onChangeAnswer={changePracticeAnswer}
             onNavigate={(index) => setSession({ ...session, index })}
             onFinish={() => setScreen('session-review')}
-            onExit={goHome}
+            onExit={requestExitSession}
           />
         )}
         {screen === 'session-review' && session && (
@@ -323,7 +437,7 @@ function App() {
               setSession({ ...session, index })
               setScreen(session.mode)
             }}
-            onSubmit={finishSession}
+            onSubmit={requestFinalSubmit}
           />
         )}
         {screen === 'results' && result && (
@@ -336,9 +450,23 @@ function App() {
             onRetry={() => startPractice(true)}
           />
         )}
-      </main>
-      <footer>Unofficial study aid based on personal CMDB/CSDM notes. The app pass mark is 80%, not an official exam rule.</footer>
-    </div>
+      {confirm && (
+        <ConfirmDialog
+          open
+          title={confirm.title}
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          danger={confirm.danger}
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            const action = confirm.action
+            setConfirm(null)
+            action()
+          }}
+        />
+      )}
+      {notice && <Notice message={notice.message} tone={notice.tone} onDismiss={() => setNotice(null)} />}
+    </AppShell>
   )
 }
 
@@ -349,7 +477,8 @@ function Dashboard({
   onPractice,
   onSmart,
   onExam,
-  onData,
+  onBrowse,
+  onProgress,
   onRetry,
   onReset,
 }: {
@@ -359,7 +488,8 @@ function Dashboard({
   onPractice: () => void
   onSmart: () => void
   onExam: () => void
-  onData: () => void
+  onBrowse: () => void
+  onProgress: () => void
   onRetry: () => void
   onReset: () => void
 }) {
@@ -374,66 +504,69 @@ function Dashboard({
     }, {}),
   ).sort((left, right) => right[1] - left[1]).slice(0, 3)
   return (
-    <div className="page dashboard">
-      <section className="hero-panel">
-        <div>
-          <span className="eyebrow">CMDB / CSDM CERTIFICATION PREP</span>
-          <h1>Turn your notes into exam confidence.</h1>
-          <p>Practice a verified question bank, learn from explanations, and track what needs another pass.</p>
-          <div className="button-row">
-            <button className="primary" onClick={onPractice}>Start practice</button>
-            <button className="secondary" onClick={onExam}>Take a mock exam</button>
+    <div className="page dashboard-page page-enter">
+      <header className="page-heading">
+        <div><span className="eyebrow">WELCOME BACK</span><h1>Ready for your next study session?</h1></div>
+        <button className="secondary compact-button" onClick={onBrowse}><Icon name="browse" /> Browse questions</button>
+      </header>
+
+      <section className="smart-hero">
+        <div className="smart-copy">
+          <span className="hero-icon"><Icon name="play" size={26} /></span>
+          <div>
+            <span className="eyebrow light">RECOMMENDED NEXT</span>
+            <h2>Continue Smart Study</h2>
+            <p>A focused set of 20 questions selected from weak, stale, flagged, and unseen topics.</p>
           </div>
+          <button className="hero-action" onClick={onSmart}>Start session <Icon name="arrow-right" /></button>
         </div>
-        <div className="readiness">
-          <span>Current accuracy</span>
-          <strong>{accuracy}%</strong>
-          <div className="progress-track"><span style={{ width: `${accuracy}%` }} /></div>
-          <small>{state.attempts.length ? `${state.attempts.length} completed attempt${state.attempts.length === 1 ? '' : 's'}` : 'Complete your first session to set a baseline.'}</small>
+        <div className="hero-stats">
+          <span><strong>{dueCount}</strong><small>Due now</small></span>
+          <span><strong>{accuracy}%</strong><small>Accuracy</small></span>
+          <span><strong>{completed}</strong><small>Seen</small></span>
         </div>
       </section>
 
-      <section className="metric-grid" aria-label="Study statistics">
-        <article><span className="metric-icon purple">Q</span><div><strong>{questions.length}</strong><small>Verified questions</small></div></article>
-        <article><span className="metric-icon green">✓</span><div><strong>{completed}</strong><small>Questions completed</small></div></article>
-        <article><span className="metric-icon orange">%</span><div><strong>{accuracy}%</strong><small>Overall accuracy</small></div></article>
-        <article><span className="metric-icon blue">★</span><div><strong>{state.bookmarks.length}</strong><small>Bookmarked</small></div></article>
-      </section>
-
-      <section className="content-grid">
-        <div>
-          <div className="section-heading"><div><span className="eyebrow">CHOOSE YOUR MODE</span><h2>How do you want to study?</h2></div></div>
-          <div className="mode-grid">
-            <button className="mode-card smart-card" onClick={onSmart}>
-              <span className="mode-art smart-art">20</span>
-              <span><strong>Smart Study</strong><small>{dueCount} questions due. Automatically focuses on weak, stale, flagged, and unseen material.</small></span>
-              <b>Study priorities →</b>
+      <section className="dashboard-grid">
+        <div className="dashboard-main">
+          <div className="section-heading">
+            <div><span className="eyebrow">STUDY YOUR WAY</span><h2>Other study modes</h2></div>
+          </div>
+          <div className="quick-mode-grid">
+            <button className="quick-mode" onClick={onPractice}>
+              <span className="quick-icon purple"><Icon name="book" /></span>
+              <span><strong>Practice</strong><small>Immediate answers and explanations</small></span>
+              <Icon name="arrow-right" />
             </button>
-            <button className="mode-card" onClick={onPractice}>
-              <span className="mode-art practice-art">01</span>
-              <span><strong>Practice mode</strong><small>Immediate feedback and explanations after every answer.</small></span>
-              <b>Begin practice →</b>
+            <button className="quick-mode" onClick={onExam}>
+              <span className="quick-icon green"><Icon name="exam" /></span>
+              <span><strong>Mock exam</strong><small>Timed or untimed certification practice</small></span>
+              <Icon name="arrow-right" />
             </button>
-            <button className="mode-card" onClick={onExam}>
-              <span className="mode-art exam-art">60</span>
-              <span><strong>Mock exam</strong><small>Randomized questions with optional timing and deferred results.</small></span>
-              <b>Configure exam →</b>
-            </button>
-            <button className="mode-card" onClick={onRetry}>
-              <span className="mode-art retry-art">↻</span>
-              <span><strong>Review mistakes</strong><small>Focus a new practice session on questions answered incorrectly.</small></span>
-              <b>Retry incorrect →</b>
+            <button className="quick-mode" onClick={onRetry}>
+              <span className="quick-icon orange"><Icon name="retry" /></span>
+              <span><strong>Review mistakes</strong><small>Retry questions answered incorrectly</small></span>
+              <Icon name="arrow-right" />
             </button>
           </div>
-          <div className="weak-topics">
-            <div><span className="eyebrow">CURRENT PRIORITIES</span><h2>Weak topics</h2></div>
+          <section className="panel weak-panel">
+            <div className="section-heading">
+              <div><span className="eyebrow">FOCUS AREAS</span><h2>Weak topics</h2></div>
+              <button className="text-button" onClick={onProgress}>View progress</button>
+            </div>
             {weakCategories.length ? weakCategories.map(([category, count]) => (
-              <span key={category}><strong>{category}</strong><small>{count} question{count === 1 ? '' : 's'} need attention</small></span>
-            )) : <p>Complete a session to identify weak categories.</p>}
-          </div>
+              <button className="topic-row" key={category} onClick={onProgress}>
+                <span><strong>{category}</strong><small>{count} question{count === 1 ? '' : 's'} need attention</small></span>
+                <span className="topic-count">{count}</span>
+              </button>
+            )) : <div className="empty-state compact"><strong>No weak topics yet</strong><small>Complete a session to create your baseline.</small></div>}
+          </section>
         </div>
-        <aside className="history-card">
-          <div className="section-heading"><div><span className="eyebrow">RECENT ACTIVITY</span><h2>Your attempts</h2></div></div>
+        <aside className="panel activity-panel">
+          <div className="readiness-ring" style={{ '--score': `${accuracy * 3.6}deg` } as React.CSSProperties}>
+            <div><strong>{accuracy}%</strong><small>Readiness</small></div>
+          </div>
+          <div className="activity-heading"><span className="eyebrow">RECENT ACTIVITY</span><h2>Your attempts</h2></div>
           {state.attempts.length === 0 ? (
             <div className="empty-state"><strong>No attempts yet</strong><small>Your latest scores will appear here.</small></div>
           ) : state.attempts.slice(0, 5).map((attempt) => (
@@ -443,7 +576,204 @@ function Dashboard({
             </div>
           ))}
           {state.attempts.length > 0 && <button className="text-button danger" onClick={onReset}>Reset local progress</button>}
-          <button className="text-button" onClick={onData}>Export or import progress</button>
+        </aside>
+      </section>
+    </div>
+  )
+}
+
+function QuestionBrowser({
+  state,
+  filters,
+  onFilters,
+  onQuestion,
+}: {
+  state: AppState
+  filters: BrowseFilters
+  onFilters: (filters: BrowseFilters) => void
+  onQuestion: (question: Question) => void
+}) {
+  const categories = [...new Set(questions.map((question) => question.category))].sort()
+  const visible = filterQuestions(questions, state, filters)
+  const statusOptions: Array<{ value: BrowseFilters['status']; label: string }> = [
+    { value: 'all', label: 'All' },
+    { value: 'bookmarked', label: 'Bookmarked' },
+    { value: 'weak', label: 'Weak' },
+    { value: 'unseen', label: 'Unseen' },
+    { value: 'incorrect', label: 'Incorrect' },
+    { value: 'source-review', label: 'Source review' },
+  ]
+  return (
+    <div className="page browse-page page-enter">
+      <header className="page-heading">
+        <div><span className="eyebrow">QUESTION LIBRARY</span><h1>Browse all 192 questions</h1><p>Search the bank, inspect your history, and start focused practice.</p></div>
+        <span className="result-count">{visible.length} results</span>
+      </header>
+      <section className="browser-controls panel">
+        <label className="search-field">
+          <Icon name="search" />
+          <input
+            value={filters.search}
+            onChange={(event) => onFilters({ ...filters, search: event.target.value })}
+            placeholder="Search questions, choices, or categories"
+            aria-label="Search questions"
+          />
+        </label>
+        <div className="select-filters">
+          <label>Category
+            <select value={filters.category} onChange={(event) => onFilters({ ...filters, category: event.target.value })}>
+              <option value="all">All categories</option>
+              {categories.map((category) => <option key={category}>{category}</option>)}
+            </select>
+          </label>
+          <label>Type
+            <select value={filters.type} onChange={(event) => onFilters({ ...filters, type: event.target.value as QuestionType | 'all' })}>
+              <option value="all">All types</option>
+              <option value="single">Single choice</option>
+              <option value="multiple">Multiple choice</option>
+              <option value="matching">Matching</option>
+              <option value="image">Image based</option>
+            </select>
+          </label>
+        </div>
+        <div className="filter-chips" aria-label="Question status filters">
+          {statusOptions.map((option) => (
+            <button key={option.value} className={filters.status === option.value ? 'active' : ''} onClick={() => onFilters({ ...filters, status: option.value })}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="question-list">
+        {visible.map(({ question, history }) => (
+          <button className="question-list-item" key={question.id} onClick={() => onQuestion(question)}>
+            <span className="question-number">{question.number}</span>
+            <span className="question-list-copy">
+              <span className="question-list-meta">{question.category} · {formatQuestionType(question.type)}</span>
+              <strong>{question.prompt}</strong>
+              <small>{history.priorityReason}</small>
+            </span>
+            <span className={`history-badge ${history.latestResult}`}>{formatHistoryResult(history.latestResult)}</span>
+            <Icon name="arrow-right" />
+          </button>
+        ))}
+        {!visible.length && <div className="empty-state panel"><strong>No matching questions</strong><small>Clear a filter or try a broader search.</small></div>}
+      </section>
+    </div>
+  )
+}
+
+function QuestionDetail({
+  question,
+  history,
+  bookmarked,
+  revealed,
+  onBack,
+  onReveal,
+  onBookmark,
+  onPractice,
+}: {
+  question: Question
+  history: QuestionHistory
+  bookmarked: boolean
+  revealed: boolean
+  onBack: () => void
+  onReveal: () => void
+  onBookmark: () => void
+  onPractice: () => void
+}) {
+  const matchPairs = getMatchPairs(question)
+  return (
+    <div className="page detail-page page-enter">
+      <button className="back-button" onClick={onBack}><Icon name="arrow-left" /> Back to Browse</button>
+      <section className="detail-layout">
+        <article className="question-card detail-card">
+          <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.category}</span></div>
+          <h1>{question.prompt}</h1>
+          <div className="detail-choices">
+            {matchPairs.length ? matchPairs.map((pair) => (
+              <div className={revealed ? 'revealed-correct' : ''} key={pair.id}><span>{pair.target}</span><strong>{revealed ? pair.item : 'Match hidden'}</strong></div>
+            )) : question.choices.map((choice) => (
+              <div className={revealed && question.correctAnswers.includes(choice.id) ? 'revealed-correct' : ''} key={choice.id}>
+                <span className="choice-letter">{choice.id}</span><span>{choice.text}</span>
+                {revealed && question.correctAnswers.includes(choice.id) && <Icon name="check" />}
+              </div>
+            ))}
+          </div>
+          {!revealed ? (
+            <button className="secondary reveal-button" onClick={onReveal}>Reveal answer</button>
+          ) : (
+            <div className="feedback good"><strong>Explanation</strong><p>{question.explanation}</p></div>
+          )}
+          {question.image && <details className="question-source"><summary>View original source</summary><img className="question-image" src={`${import.meta.env.BASE_URL}${question.image}`} alt={`Original source for question ${question.number}`} /></details>}
+        </article>
+        <aside className="detail-sidebar">
+          <section className="panel">
+            <span className="eyebrow">YOUR HISTORY</span>
+            <h2>{history.priorityReason}</h2>
+            <div className="detail-stats">
+              <span><strong>{history.attempts}</strong><small>Attempts</small></span>
+              <span><strong>{history.accuracy}%</strong><small>Accuracy</small></span>
+              <span><strong>{history.lastAttemptedAt ? new Date(history.lastAttemptedAt).toLocaleDateString() : 'Never'}</strong><small>Last studied</small></span>
+            </div>
+          </section>
+          <button className="primary wide" onClick={onPractice}><Icon name="play" /> Practice from this question</button>
+          <button className="secondary wide" onClick={onBookmark}><Icon name="bookmark" /> {bookmarked ? 'Remove bookmark' : 'Bookmark question'}</button>
+        </aside>
+      </section>
+    </div>
+  )
+}
+
+function ProgressPage({
+  state,
+  onBrowseWeak,
+  onSmart,
+}: {
+  state: AppState
+  onBrowseWeak: () => void
+  onSmart: () => void
+}) {
+  const overview = buildStudyOverview(questions, state)
+  return (
+    <div className="page progress-page page-enter">
+      <header className="page-heading">
+        <div><span className="eyebrow">YOUR PROGRESS</span><h1>Build confidence by closing gaps</h1><p>Mastery uses your latest answer for each question.</p></div>
+        <button className="primary" onClick={onSmart}><Icon name="play" /> Smart Study</button>
+      </header>
+      <section className="progress-summary">
+        <article className="readiness-card panel">
+          <div className="readiness-ring large" style={{ '--score': `${overview.accuracy * 3.6}deg` } as React.CSSProperties}>
+            <div><strong>{overview.accuracy}%</strong><small>Accuracy</small></div>
+          </div>
+          <div><span className="eyebrow">OVERALL READINESS</span><h2>{overview.accuracy >= 80 ? 'On target' : 'Keep building'}</h2><p>{overview.totalCorrect} correct answers from {overview.totalAnswers} total responses.</p></div>
+        </article>
+        <div className="progress-metrics">
+          <article><span className="quick-icon purple"><Icon name="book" /></span><strong>{overview.attemptedQuestions}</strong><small>Questions seen</small></article>
+          <article><span className="quick-icon orange"><Icon name="warning" /></span><strong>{overview.weakQuestions}</strong><small>Weak questions</small></article>
+          <article><span className="quick-icon green"><Icon name="progress" /></span><strong>{state.attempts.length}</strong><small>Sessions complete</small></article>
+          <article><span className="quick-icon blue"><Icon name="bookmark" /></span><strong>{state.bookmarks.length}</strong><small>Bookmarked</small></article>
+        </div>
+      </section>
+      <section className="progress-grid">
+        <div className="panel mastery-panel">
+          <div className="section-heading"><div><span className="eyebrow">CATEGORY MASTERY</span><h2>Where to focus</h2></div><button className="text-button" onClick={onBrowseWeak}>Browse weak questions</button></div>
+          {overview.categoryMastery.map((item) => (
+            <div className="mastery-row" key={item.category}>
+              <div><strong>{item.category}</strong><small>{item.correct} mastered · {item.attempted}/{item.total} attempted</small></div>
+              <div className="mastery-value"><span>{item.percent}%</span><div className="progress-track"><span style={{ width: `${item.percent}%` }} /></div></div>
+            </div>
+          ))}
+        </div>
+        <aside className="panel progress-history">
+          <span className="eyebrow">RECENT SESSIONS</span><h2>Latest results</h2>
+          {state.attempts.slice(0, 8).map((attempt) => (
+            <div className="attempt-row" key={attempt.id}>
+              <span className={`score-dot ${attempt.score >= state.passingScore ? 'pass' : 'fail'}`}>{attempt.score}%</span>
+              <div><strong>{formatAttemptMode(attempt.mode)}</strong><small>{new Date(attempt.completedAt).toLocaleDateString()} · {attempt.questionIds.length} questions</small></div>
+            </div>
+          ))}
+          {!state.attempts.length && <div className="empty-state"><strong>No sessions yet</strong><small>Your progress will appear after your first session.</small></div>}
         </aside>
       </section>
     </div>
@@ -587,21 +917,54 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
   onFinish: () => void
   onExit: () => void
 }) {
+  const [navigatorOpen, setNavigatorOpen] = useState(false)
   const question = session.questions[session.index]
   const selected = session.answers[question.id] ?? []
   const submitted = session.submitted.includes(question.id)
   const correct = submitted && isCorrect(question, selected)
   const matchPairs = getMatchPairs(question)
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.matches('input, select, textarea') || event.metaKey || event.ctrlKey || event.altKey) return
+      if (event.key === 'ArrowLeft' && session.index > 0) onNavigate(session.index - 1)
+      if (event.key === 'ArrowRight' && session.index < session.questions.length - 1) onNavigate(session.index + 1)
+      if (event.key.toLowerCase() === 'r') onToggleReview(question.id)
+      if (event.key.toLowerCase() === 'b') onBookmark(question.id)
+      if (event.key === 'Escape') onExit()
+      if (event.key === 'Enter' && session.mode !== 'exam' && !submitted && selected.length) onSubmit()
+      const choiceIndex = Number(event.key) - 1
+      if (!matchPairs.length && choiceIndex >= 0 && choiceIndex < question.choices.length && !submitted) {
+        onAnswer(question, question.choices[choiceIndex].id)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [matchPairs.length, onAnswer, onBookmark, onExit, onNavigate, onSubmit, onToggleReview, question, selected.length, session, submitted])
   return (
-    <div className="quiz-layout">
-      <aside className="question-nav">
-        <div><span className="eyebrow">{session.mode === 'exam' ? 'MOCK EXAM' : session.mode === 'smart' ? 'SMART STUDY' : 'PRACTICE'}</span><strong>{session.index + 1} / {session.questions.length}</strong></div>
+    <div className="study-session">
+      <header className="session-header">
+        <button className="icon-control" onClick={onExit} aria-label="Exit session"><Icon name="close" /></button>
+        <div className="session-progress">
+          <div><span>{session.mode === 'exam' ? 'Mock exam' : session.mode === 'smart' ? 'Smart Study' : 'Practice'}</span><strong>Question {session.index + 1} of {session.questions.length}</strong></div>
+          <div className="progress-track"><span style={{ width: `${((session.index + 1) / session.questions.length) * 100}%` }} /></div>
+        </div>
+        {session.secondsLeft !== null && <strong className={`session-timer ${session.secondsLeft < 60 ? 'time-warning' : ''}`}>{formatDuration(session.secondsLeft)}</strong>}
+        <button className="navigator-toggle" onClick={() => setNavigatorOpen(true)}><Icon name="menu" /> Questions</button>
+      </header>
+
+      <div className={`navigator-backdrop ${navigatorOpen ? 'open' : ''}`} onMouseDown={(event) => event.target === event.currentTarget && setNavigatorOpen(false)}>
+        <aside className={`question-navigator ${navigatorOpen ? 'open' : ''}`} aria-label="Question navigator">
+          <div className="navigator-heading">
+            <div><span className="eyebrow">SESSION MAP</span><strong>{session.index + 1} / {session.questions.length}</strong></div>
+            <button className="icon-control" onClick={() => setNavigatorOpen(false)} aria-label="Close question navigator"><Icon name="close" /></button>
+          </div>
         <div className="question-grid">
           {session.questions.map((item, index) => (
             <button
               key={item.id}
               className={`${index === session.index ? 'current' : ''} ${(session.answers[item.id]?.length ?? 0) > 0 ? 'answered' : ''} ${session.markedForReview.includes(item.id) ? 'marked-review' : ''}`}
-              onClick={() => onNavigate(index)}
+              onClick={() => { onNavigate(index); setNavigatorOpen(false) }}
               aria-label={`Question ${index + 1}${session.markedForReview.includes(item.id) ? ', marked for review' : ''}`}
             >
               {index + 1}
@@ -626,20 +989,20 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
             Review marked ({session.markedForReview.length})
           </button>
         )}
-        <button className="text-button review-finish-link" onClick={onFinish}>Review & finish</button>
-        <button className="text-button" onClick={onExit}>Exit session</button>
-      </aside>
-      <section className="question-stage">
+          <button className="primary wide navigator-finish" onClick={onFinish}>Review & finish</button>
+        </aside>
+      </div>
+
+      <main className="question-stage">
         <div className="quiz-status">
           <span>{question.category}</span>
-          {session.secondsLeft !== null && <strong className={session.secondsLeft < 60 ? 'time-warning' : ''}>{formatDuration(session.secondsLeft)}</strong>}
           <button
             className={`review-flag ${session.markedForReview.includes(question.id) ? 'active' : ''}`}
             onClick={() => onToggleReview(question.id)}
           >
-            {session.markedForReview.includes(question.id) ? 'Flagged for review' : 'Mark for review'}
+            <Icon name="flag" size={17} /> {session.markedForReview.includes(question.id) ? 'Review marked' : 'Mark for review'}
           </button>
-          <button className={`bookmark ${bookmarks.includes(question.id) ? 'saved' : ''}`} onClick={() => onBookmark(question.id)}>{bookmarks.includes(question.id) ? '★ Saved' : '☆ Bookmark'}</button>
+          <button className={`bookmark ${bookmarks.includes(question.id) ? 'saved' : ''}`} onClick={() => onBookmark(question.id)}><Icon name="bookmark" size={17} /> {bookmarks.includes(question.id) ? 'Saved' : 'Bookmark'}</button>
         </div>
         <article className="question-card">
           <div className="question-meta"><span>QUESTION {question.number}</span><span>{question.type === 'multiple' ? 'Select all that apply' : matchPairs.length ? 'Drag each item to its match' : 'Select one answer'}</span></div>
@@ -668,7 +1031,8 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
                   disabled={submitted}
                 >
                   <span className="choice-letter">{choice.id}</span><span>{choice.text}</span>
-                  {revealCorrect && <b>✓</b>}{revealWrong && <b>×</b>}
+                  {!submitted && <kbd>{question.choices.indexOf(choice) + 1}</kbd>}
+                  {revealCorrect && <Icon name="check" />}{revealWrong && <b>×</b>}
                 </button>
               )
             })}
@@ -687,17 +1051,18 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
             </div>
           )}
         </article>
-        <div className="quiz-actions">
-          <button className="secondary" disabled={session.index === 0} onClick={() => onNavigate(session.index - 1)}>Previous</button>
+        <div className="quiz-actions sticky-actions">
+          <button className="secondary" disabled={session.index === 0} onClick={() => onNavigate(session.index - 1)}><Icon name="arrow-left" /> Previous</button>
           <div>
             {session.mode !== 'exam' && !submitted && <button className="primary" disabled={!selected.length} onClick={onSubmit}>Check answer</button>}
             {session.mode !== 'exam' && submitted && <button className="secondary" onClick={() => onChangeAnswer(question.id)}>Change answer</button>}
             {session.index < session.questions.length - 1 ? (
-              <button className={submitted || session.mode === 'exam' ? 'primary' : 'secondary'} onClick={() => onNavigate(session.index + 1)}>Next</button>
+              <button className={submitted || session.mode === 'exam' ? 'primary' : 'secondary'} onClick={() => onNavigate(session.index + 1)}>Next <Icon name="arrow-right" /></button>
             ) : <button className="primary" onClick={onFinish}>Review & finish</button>}
           </div>
         </div>
-      </section>
+        <p className="keyboard-hint">Keyboard: 1–9 choose · Enter check · ←/→ navigate · R review · B bookmark</p>
+      </main>
     </div>
   )
 }
@@ -979,6 +1344,28 @@ function formatResponse(question: Question, selected: string[], correctOnly = fa
     .map((id) => question.choices.find((choice) => choice.id === id)?.text)
     .filter(Boolean)
     .join('; ')
+}
+
+function formatQuestionType(type: QuestionType): string {
+  return {
+    single: 'Single choice',
+    multiple: 'Multiple choice',
+    matching: 'Matching',
+    image: 'Image based',
+  }[type]
+}
+
+function formatHistoryResult(result: QuestionHistory['latestResult']): string {
+  return {
+    correct: 'Correct',
+    incorrect: 'Needs work',
+    unanswered: 'Unanswered',
+    unseen: 'Unseen',
+  }[result]
+}
+
+function formatAttemptMode(mode: Attempt['mode']): string {
+  return mode === 'exam' ? 'Mock exam' : mode === 'smart' ? 'Smart Study' : 'Practice'
 }
 
 function exportProgress(state: AppState): void {

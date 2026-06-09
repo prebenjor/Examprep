@@ -1,6 +1,6 @@
 # CMDB / CSDM Exam Prep
 
-A responsive, offline-friendly study app built from the supplied CMDB/CSDM study notes. It provides immediate-feedback practice, prioritized Smart Study sessions, randomized mock exams, score percentages, category breakdowns, bookmarks, review flags, and device-local history. The app pass mark is 80%.
+A responsive, offline-friendly learning app built from the supplied CMDB/CSDM study notes. It provides adaptive Smart Study sessions, a searchable question library, progress and category-mastery views, immediate-feedback practice, randomized mock exams, bookmarks, review flags, and device-local history. The app pass mark is 80%.
 
 ## Run locally
 
@@ -45,6 +45,10 @@ Use **Data & Backup** to export progress as versioned JSON and import it on anot
 ## Smart Study
 
 Smart Study selects 20 questions using attempt history. Recent mistakes and unanswered questions receive the highest priority, followed by previously flagged and unseen questions. Correct questions gradually return as they become stale. Each question shows its selection reason, attempt count, accuracy, and last-study date.
+
+## Interface
+
+Desktop uses a compact sidebar for Home, Browse, Progress, and Data. Phones use persistent bottom navigation. Study sessions use a focused question layout with a collapsible question map, sticky phone controls, and keyboard shortcuts for choices, navigation, review marking, bookmarks, and answer submission.
 
 The repository and deployed question bank are public.
 

@@ -18,6 +18,14 @@
   --red: #d44e5f;
   --orange: #e48a36;
   --shadow: 0 18px 50px rgba(41, 37, 89, 0.1);
+  --card-shadow: 0 8px 28px rgba(41, 37, 89, 0.07);
+  --radius-lg: 18px;
+  --page-bg: #f6f7fb;
+  --green-soft: #e6f8f1;
+  --red-soft: #fdecef;
+  --orange-soft: #fff1e3;
+  --blue: #3384d9;
+  --blue-soft: #e7f2ff;
 }
 
 :root[data-theme='dark'] {
@@ -32,11 +40,18 @@
   --purple-dark: #7f6fff;
   --purple-soft: #2c2950;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
+  --card-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+  --page-bg: #111426;
+  --green-soft: #173b35;
+  --red-soft: #44232d;
+  --orange-soft: #422f20;
+  --blue: #70b3ff;
+  --blue-soft: #1c3552;
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; overflow-x: hidden; background: #f6f7fb; }
 :root[data-theme='dark'] body { background: #111426; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { color: inherit; }
-button:focus-visible, input:focus-visible { outline: 3px solid rgba(101, 84, 217, .35); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid rgba(101, 84, 217, .35); outline-offset: 2px; }
