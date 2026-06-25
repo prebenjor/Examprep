@@ -1269,7 +1269,11 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "SCCM Service Graph Connecior\n\n0. SCCM Usage Metering Spoke"
+        "text": "SCCM Service Graph Connector"
+      },
+      {
+        "id": "D",
+        "text": "SCCM Usage Metering Spoke"
       }
     ],
     "correctAnswers": [
