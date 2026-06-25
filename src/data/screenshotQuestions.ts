@@ -1594,7 +1594,7 @@ export const screenshotQuestions: Question[] = [
     "number": 78,
     "category": "CMDB Governance and Health",
     "type": "single",
-    "prompt": "A CMDB Administrator is reviewing the health of the CMDB and notices a large percentage of the Hardware CIs are missing serial numb&s. The Administrator is\nconcerned this may cause duplicate CIs and would like to resolve the issue in a timely manner.\nWhat structured guidelines provided by ServiceNow are available to troubleshoot and resolve the issue?",
+    "prompt": "A CMDB Administrator is reviewing the health of the CMDB and notices a large percentage of the Hardware CIs are missing serial numbers. The Administrator is\nconcerned this may cause duplicate CIs and would like to resolve the issue in a timely manner.\nWhat structured guidelines provided by ServiceNow are available to troubleshoot and resolve the issue?",
     "choices": [
       {
         "id": "A",
@@ -1606,7 +1606,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "CSDB Data Foundations Dashboard Playbooks"
+        "text": "CMDB Data Foundations Dashboard Playbooks"
       },
       {
         "id": "D",
@@ -1633,7 +1633,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "State CIs"
+        "text": "Stale CIs"
       },
       {
         "id": "C",
@@ -1645,7 +1645,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "E",
-        "text": "Upgraded CIs\n=x\n\n|"
+        "text": "Upgraded CIs"
       }
     ],
     "correctAnswers": [
@@ -1673,7 +1673,11 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "The Orphan metric has a Health Inclusion rule configured for the Server class.\n\n0. The Orphan metric has a CMDB Group configured for the Server class\n\nI"
+        "text": "The Orphan metric has a Health Inclusion rule configured for the Server class."
+      },
+      {
+        "id": "D",
+        "text": "The Orphan metric has a CMDB Group configured for the Server class."
       }
     ],
     "correctAnswers": [
@@ -1868,8 +1872,30 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
-    "explanation": "Source answer: CI Analyst: read-only CMDB access; Service or Product Owner: accountable for portfolio lifecycle; CMDB Process Owner: manages assigned CI tables and tasks; Configuration Manager/CMDB Admin: highest CMDB privileges.",
+    "explanation": "Source answer: CMDB Process Owner: read-only CMDB access; Service or Product Owner: accountable for portfolio lifecycle; CI Analyst: manages assigned CI tables and tasks; Configuration Manager/CMDB Admin: highest CMDB privileges.",
     "image": "questions/image48.png",
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "CMDB Process Owner",
+        "target": "read-only CMDB access"
+      },
+      {
+        "id": "M2",
+        "item": "Service or Product Owner",
+        "target": "accountable for portfolio lifecycle"
+      },
+      {
+        "id": "M3",
+        "item": "CI Analyst",
+        "target": "manages assigned CI tables and tasks"
+      },
+      {
+        "id": "M4",
+        "item": "Configuration Manager/CMDB Admin",
+        "target": "highest CMDB privileges"
+      }
+    ],
     "needsReview": false
   },
   {

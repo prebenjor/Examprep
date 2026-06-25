@@ -107,4 +107,64 @@ describe('question presentation data', () => {
     expect(question?.prompt).not.toContain('Data Manages')
     expect(question?.prompt).not.toMatch(/\nR$/)
   })
+
+  it('uses corrected Question 78 playbook wording', () => {
+    const question = questions.find((item) => item.id === 'source-t3-009')
+    expect(question?.prompt).toContain('serial numbers')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'C', text: 'CMDB Data Foundations Dashboard Playbooks' },
+    ]))
+    expect(question?.choices.some((choice) => choice.text.includes('CSDB'))).toBe(false)
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
+
+  it('uses corrected Question 79 data quality choices', () => {
+    const question = questions.find((item) => item.id === 'source-t3-010')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'B', text: 'Stale CIs' },
+      { id: 'E', text: 'Upgraded CIs' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['B', 'C'])
+  })
+
+  it('keeps Question 80 Orphan metric choices separate', () => {
+    const question = questions.find((item) => item.id === 'source-t3-011')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      {
+        id: 'C',
+        text: 'The Orphan metric has a Health Inclusion rule configured for the Server class.',
+      },
+      {
+        id: 'D',
+        text: 'The Orphan metric has a CMDB Group configured for the Server class.',
+      },
+    ]))
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
+
+  it('uses the provided Question 87 role matching answers', () => {
+    const question = questions.find((item) => item.id === 'source-t3-018')
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'CMDB Process Owner',
+        target: 'read-only CMDB access',
+      },
+      {
+        id: 'M2',
+        item: 'Service or Product Owner',
+        target: 'accountable for portfolio lifecycle',
+      },
+      {
+        id: 'M3',
+        item: 'CI Analyst',
+        target: 'manages assigned CI tables and tasks',
+      },
+      {
+        id: 'M4',
+        item: 'Configuration Manager/CMDB Admin',
+        target: 'highest CMDB privileges',
+      },
+    ])
+  })
 })
