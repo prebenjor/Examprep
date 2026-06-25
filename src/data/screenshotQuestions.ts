@@ -3694,7 +3694,7 @@ export const screenshotQuestions: Question[] = [
     "number": 148,
     "category": "CMDB Insights and Value",
     "type": "multiple",
-    "prompt": "A CMDB Administrator wants to leverage the CMDB Data Foundations Dashboard.\nWhat are benefits of using this application?",
+    "prompt": "A CMDB Administrator wants to leverage the CMDB Data Foundations Dashboard.\nWhat are benefits of using this application? (Choose two.)",
     "choices": [
       {
         "id": "A",
@@ -3800,7 +3800,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "Unified Map\n\n[Y"
+        "text": "Unified Map"
       }
     ],
     "correctAnswers": [

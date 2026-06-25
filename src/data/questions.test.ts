@@ -218,4 +218,19 @@ describe('question presentation data', () => {
     expect(question?.choices.some((choice) => choice.text.includes('Up to@nd'))).toBe(false)
     expect(question?.correctAnswers).toEqual(['A', 'B'])
   })
+
+  it('labels Question 148 as choose two', () => {
+    const question = questions.find((item) => item.id === 'source-t4-021')
+    expect(question?.prompt).toContain('(Choose two.)')
+    expect(question?.type).toBe('multiple')
+    expect(question?.correctAnswers).toEqual(['A', 'C'])
+  })
+
+  it('uses corrected Question 151 Unified Map option wording', () => {
+    const question = questions.find((item) => item.id === 'source-t4-024')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'C', text: 'Unified Map' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
 })
