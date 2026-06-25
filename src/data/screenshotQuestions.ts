@@ -1420,7 +1420,7 @@ export const screenshotQuestions: Question[] = [
     "number": 72,
     "category": "CMDB Governance and Health",
     "type": "single",
-    "prompt": "A CMDB Administrator is asked 10 clean up the CMDB duplicates.\nWhat is the preferred way to manage this task?",
+    "prompt": "A CMDB Administrator is asked to clean up the CMDB duplicates.\nWhat is the preferred way to manage this task?",
     "choices": [
       {
         "id": "A",

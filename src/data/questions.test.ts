@@ -88,4 +88,10 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('uses corrected Question 72 duplicate cleanup wording', () => {
+    const question = questions.find((item) => item.id === 'source-t3-003')
+    expect(question?.prompt).toContain('A CMDB Administrator is asked to clean up')
+    expect(question?.prompt).not.toContain('asked 10 clean up')
+  })
 })
