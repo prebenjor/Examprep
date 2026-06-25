@@ -167,4 +167,46 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('keeps Question 96 CMDB Data Manager and De-duplication Templates separate', () => {
+    const question = questions.find((item) => item.id === 'source-t3-027')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'C', text: 'CMDB Data Manager' },
+      { id: 'D', text: 'De-duplication Templates' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
+
+  it('preserves Question 128 Incident Management matching source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t4-001')
+    expect(question?.prompt).toContain('integrate additional products to enhance its functionality')
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'Hardware Asset Management',
+        target: 'Delivers asset actions and events for the management and maintenance of assets during incidents',
+      },
+      {
+        id: 'M2',
+        item: 'Risk Management',
+        target: 'Supplies critical IT and financial risk data, enabling the team to assess the broader impact of incidents on business operations',
+      },
+      {
+        id: 'M3',
+        item: 'Discovery',
+        target: 'Offers detailed operational-level data on hardware and application infrastructure to improve incident resolution',
+      },
+      {
+        id: 'M4',
+        item: 'Service Portfolio Management',
+        target: 'Provides life cycle information about services, helping to align incidents with the status and history of services',
+      },
+    ])
+  })
+
+  it('uses corrected Question 130 Change Management wording', () => {
+    const question = questions.find((item) => item.id === 'source-t4-003')
+    expect(question?.prompt).toContain('Change Management')
+    expect(question?.prompt).not.toContain('Chinge Management')
+  })
 })

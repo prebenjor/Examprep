@@ -80,7 +80,7 @@ const matchingPrompts: Record<string, string> = {
   'source-t3-033':
     'Match each CMDB Health KPI to the metric associated with it.',
   'source-t4-001':
-    'Match each ServiceNow product to the value it brings to Incident Management.',
+    'A manufacturing organization has implemented Incident Management in ServiceNow and wants to integrate additional products to enhance its functionality.\nDrag each ServiceNow product to the value it brings to supporting Incident Management.',
   'source-t5-005':
     'Match each CSDM life-cycle object or attribute to its description.',
   'source-t5-016':

@@ -2137,7 +2137,11 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "CMDB Data Manager\n\n0. De duplication Templates"
+        "text": "CMDB Data Manager"
+      },
+      {
+        "id": "D",
+        "text": "De-duplication Templates"
       },
       {
         "id": "E",
@@ -3064,7 +3068,7 @@ export const screenshotQuestions: Question[] = [
     "number": 128,
     "category": "CMDB Insights and Value",
     "type": "matching",
-    "prompt": "DRAG DROP -\nA manufacturing organization has implemented Incident Management in ServiceNow and wants to integrate additional products to enhance its functionality.\nDrag each ServiceNow product to the value it brings to supporting Incident Management.\n| Delivers asset actions and events for the management and\n| Hardware Asset Management BN ] | maintenance of assets during incidents\n. E\u00e2\u20ac\" \u00e2\u20ac\" - Supplies critical IT and financial risk data, enabling the team to ass\n| Risk Management | | the broader impact of incidents on business operations\n| Service Portfolio Management | | Offers detailed operational-level data on hardware and application !\nto improve incident resolution\nProvides life cycle information about services, helping to align\n| incidents with the status and history of services",
+    "prompt": "DRAG DROP -\nA manufacturing organization has implemented Incident Management in ServiceNow and wants to integrate additional products to enhance its functionality.\nDrag each ServiceNow product to the value it brings to supporting Incident Management.",
     "choices": [
       {
         "id": "REVEAL",
@@ -3074,8 +3078,30 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
-    "explanation": "Source answer: Hardware Asset Management: asset actions and events; Risk Management: IT and financial risk data; Discovery: infrastructure operational data; Service Portfolio Management: service lifecycle information.",
+    "explanation": "Source answer: Hardware Asset Management: Delivers asset actions and events for the management and maintenance of assets during incidents; Risk Management: Supplies critical IT and financial risk data, enabling the team to assess the broader impact of incidents on business operations; Discovery: Offers detailed operational-level data on hardware and application infrastructure to improve incident resolution; Service Portfolio Management: Provides life cycle information about services, helping to align incidents with the status and history of services.",
     "image": "questions/image37.png",
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "Hardware Asset Management",
+        "target": "Delivers asset actions and events for the management and maintenance of assets during incidents"
+      },
+      {
+        "id": "M2",
+        "item": "Risk Management",
+        "target": "Supplies critical IT and financial risk data, enabling the team to assess the broader impact of incidents on business operations"
+      },
+      {
+        "id": "M3",
+        "item": "Discovery",
+        "target": "Offers detailed operational-level data on hardware and application infrastructure to improve incident resolution"
+      },
+      {
+        "id": "M4",
+        "item": "Service Portfolio Management",
+        "target": "Provides life cycle information about services, helping to align incidents with the status and history of services"
+      }
+    ],
     "needsReview": false
   },
   {
@@ -3114,7 +3140,7 @@ export const screenshotQuestions: Question[] = [
     "number": 130,
     "category": "CMDB Insights and Value",
     "type": "single",
-    "prompt": "An organization is changing data centers and needs to know the consequences of the planned changes.\nHow can Application Service mapping be used as part of Chinge Management?",
+    "prompt": "An organization is changing data centers and needs to know the consequences of the planned changes.\nHow can Application Service mapping be used as part of Change Management?",
     "choices": [
       {
         "id": "A",
