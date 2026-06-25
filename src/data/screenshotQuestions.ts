@@ -1315,7 +1315,7 @@ export const screenshotQuestions: Question[] = [
     "number": 69,
     "category": "Data Ingestion and IRE",
     "type": "single",
-    "prompt": "A CMDB Data Oaner has requested belter insights on the different data sources that make up the CMDB data set. The Platform Owner knows that the new Service Graph\nConnector Central plugin is just what is needed.\nAfter installing the plugin, what workspace will have the new Service Graph Connector Central tab avaslable?",
+    "prompt": "A CMDB Data Owner has requested better insights on the different data sources that make up the CMDB data set. The Platform Owner knows that the new Service Graph\nConnector Central plugin is just what is needed.\nAfter installing the plugin, what workspace will have the new Service Graph Connector Central tab available?",
     "choices": [
       {
         "id": "A",
@@ -1323,7 +1323,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "CMDB Workspace N"
+        "text": "CMDB Workspace"
       },
       {
         "id": "C",
@@ -1346,7 +1346,11 @@ export const screenshotQuestions: Question[] = [
     "choices": [
       {
         "id": "A",
-        "text": "Correciness\n8. Compliance"
+        "text": "Correctness"
+      },
+      {
+        "id": "B",
+        "text": "Compliance"
       },
       {
         "id": "C",
@@ -1375,8 +1379,40 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
-    "explanation": "Source answer: Audits: compare actual and expected values; Required fields: use should be minimized; Orphan CIs: attributes or relationships are missing; Recommended fields: useful optional troubleshooting values; Stale CIs: not recently updated; Duplicate CIs: detected by identification and reconciliation with remediation tools.",
+    "explanation": "Source answer: Audits: Use these to compare actual values with expected values; Duplicate CIs: Use of these should be minimized; Required fields: Certain attribute values are not set, or relationships are missing; Recommended fields: Preferable for them to be populated, as they could be useful in troubleshooting issues; Stale CIs: Have not been updated and may be outdated; Orphan CIs: Detected during identification and reconciliation and have associated base system remediation tools.",
     "image": "questions/image80.png",
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "Audits",
+        "target": "Use these to compare actual values with expected values"
+      },
+      {
+        "id": "M2",
+        "item": "Duplicate CIs",
+        "target": "Use of these should be minimized"
+      },
+      {
+        "id": "M3",
+        "item": "Required fields",
+        "target": "Certain attribute values are not set, or relationships are missing"
+      },
+      {
+        "id": "M4",
+        "item": "Recommended fields",
+        "target": "Preferable for them to be populated, as they could be useful in troubleshooting issues"
+      },
+      {
+        "id": "M5",
+        "item": "Stale CIs",
+        "target": "Have not been updated and may be outdated"
+      },
+      {
+        "id": "M6",
+        "item": "Orphan CIs",
+        "target": "Detected during identification and reconciliation and have associated base system remediation tools"
+      }
+    ],
     "needsReview": true
   },
   {

@@ -32,4 +32,60 @@ describe('question presentation data', () => {
     ]))
     expect(question?.correctAnswers).toEqual(['C'])
   })
+
+  it('uses corrected Service Graph Connector Central wording and CMDB Workspace choice', () => {
+    const question = questions.find((item) => item.id === 'source-t2-031')
+    expect(question?.prompt).toContain('A CMDB Data Owner has requested better insights')
+    expect(question?.prompt).toContain('tab available?')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'B', text: 'CMDB Workspace' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['B'])
+  })
+
+  it('keeps Question 70 Correctness and Compliance as separate choices', () => {
+    const question = questions.find((item) => item.id === 'source-t3-001')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'A', text: 'Correctness' },
+      { id: 'B', text: 'Compliance' },
+      { id: 'C', text: 'Completeness' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['A'])
+  })
+
+  it('preserves Question 71 drag/drop source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t3-002')
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'Audits',
+        target: 'Use these to compare actual values with expected values',
+      },
+      {
+        id: 'M2',
+        item: 'Duplicate CIs',
+        target: 'Use of these should be minimized',
+      },
+      {
+        id: 'M3',
+        item: 'Required fields',
+        target: 'Certain attribute values are not set, or relationships are missing',
+      },
+      {
+        id: 'M4',
+        item: 'Recommended fields',
+        target: 'Preferable for them to be populated, as they could be useful in troubleshooting issues',
+      },
+      {
+        id: 'M5',
+        item: 'Stale CIs',
+        target: 'Have not been updated and may be outdated',
+      },
+      {
+        id: 'M6',
+        item: 'Orphan CIs',
+        target: 'Detected during identification and reconciliation and have associated base system remediation tools',
+      },
+    ])
+  })
 })
