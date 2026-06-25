@@ -3971,7 +3971,7 @@ export const screenshotQuestions: Question[] = [
     "number": 157,
     "category": "CSDM Fundamentals",
     "type": "matching",
-    "prompt": "DRAG DROP -\nSome steps need to be taken to transition from using different status attributes in the CMDB to life cycle objects.\nDrag and drop the objectives/attributes to the description.\nlife_cycle_ stage status | Answer Area\n8 This table is pre-populated with mappings for legacy status value\nlife_cycle_object | based on its table, to the best-fit CSDM life-cycle value pair.\n. . This is a record attribute that reflects a meta-level state of the rec\nlife_cycle_mapping | life cycle.\n| life_cycle_stage | This is a record attribute that reflects a sub-level state of the reco\noT a life cycle.\nThis table uses the type of CI (hardware, document, logical, etc.)\ndetermine which sub-level life cycle state values are available.",
+    "prompt": "DRAG DROP -\nSome steps need to be taken to transition from using different status attributes in the CMDB to life cycle objects.\nDrag and drop the objectives/attributes to the description.",
     "choices": [
       {
         "id": "REVEAL",
@@ -3981,8 +3981,30 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
-    "explanation": "Source answer: life_cycle_mapping: legacy-to-CSDM mappings; life_cycle_stage: meta-level lifecycle state; life_cycle_stage_status: sub-level state; life_cycle_object: determines allowed sub-level values by CI type.",
+    "explanation": "Source answer: life_cycle_mapping: This table is pre-populated with mappings for legacy status value based on its table, to the best-fit CSDM life-cycle value pair.; life_cycle_stage: This is a record attribute that reflects a meta-level state of the record life cycle.; life_cycle_stage_status: This is a record attribute that reflects a sub-level state of the record life cycle.; life_cycle_object: This table uses the type of CI (hardware, document, logical, etc.) to determine which sub-level life cycle state values are available.",
     "image": "questions/image139.png",
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "life_cycle_mapping",
+        "target": "This table is pre-populated with mappings for legacy status value based on its table, to the best-fit CSDM life-cycle value pair."
+      },
+      {
+        "id": "M2",
+        "item": "life_cycle_stage",
+        "target": "This is a record attribute that reflects a meta-level state of the record life cycle."
+      },
+      {
+        "id": "M3",
+        "item": "life_cycle_stage_status",
+        "target": "This is a record attribute that reflects a sub-level state of the record life cycle."
+      },
+      {
+        "id": "M4",
+        "item": "life_cycle_object",
+        "target": "This table uses the type of CI (hardware, document, logical, etc.) to determine which sub-level life cycle state values are available."
+      }
+    ],
     "needsReview": false
   },
   {

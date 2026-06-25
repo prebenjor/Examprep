@@ -233,4 +233,31 @@ describe('question presentation data', () => {
     ]))
     expect(question?.correctAnswers).toEqual(['C'])
   })
+
+  it('preserves Question 157 life-cycle matching source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t5-005')
+    expect(question?.prompt).toContain('transition from using different status attributes')
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'life_cycle_mapping',
+        target: 'This table is pre-populated with mappings for legacy status value based on its table, to the best-fit CSDM life-cycle value pair.',
+      },
+      {
+        id: 'M2',
+        item: 'life_cycle_stage',
+        target: 'This is a record attribute that reflects a meta-level state of the record life cycle.',
+      },
+      {
+        id: 'M3',
+        item: 'life_cycle_stage_status',
+        target: 'This is a record attribute that reflects a sub-level state of the record life cycle.',
+      },
+      {
+        id: 'M4',
+        item: 'life_cycle_object',
+        target: 'This table uses the type of CI (hardware, document, logical, etc.) to determine which sub-level life cycle state values are available.',
+      },
+    ])
+  })
 })
