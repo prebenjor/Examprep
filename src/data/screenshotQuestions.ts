@@ -3300,7 +3300,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "C",
-        "text": "Set the relationship level to 'Up to@nd level relationships'"
+        "text": "Set the relationship to 'Up to 2nd level relationships.'"
       },
       {
         "id": "D",

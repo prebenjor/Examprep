@@ -209,4 +209,13 @@ describe('question presentation data', () => {
     expect(question?.prompt).toContain('Change Management')
     expect(question?.prompt).not.toContain('Chinge Management')
   })
+
+  it('uses corrected Question 135 relationship option wording', () => {
+    const question = questions.find((item) => item.id === 'source-t4-008')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'C', text: "Set the relationship to 'Up to 2nd level relationships.'" },
+    ]))
+    expect(question?.choices.some((choice) => choice.text.includes('Up to@nd'))).toBe(false)
+    expect(question?.correctAnswers).toEqual(['A', 'B'])
+  })
 })
