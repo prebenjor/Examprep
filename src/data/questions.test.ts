@@ -100,4 +100,11 @@ describe('question presentation data', () => {
     expect(question?.prompt).toContain('latest IP address')
     expect(question?.prompt).not.toContain('l210$1 IP address')
   })
+
+  it('uses corrected Question 74 Data Manager wording', () => {
+    const question = questions.find((item) => item.id === 'source-t3-005')
+    expect(question?.prompt).toContain('take in Data Manager?')
+    expect(question?.prompt).not.toContain('Data Manages')
+    expect(question?.prompt).not.toMatch(/\nR$/)
+  })
 })

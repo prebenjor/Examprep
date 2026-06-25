@@ -1478,7 +1478,7 @@ export const screenshotQuestions: Question[] = [
     "number": 74,
     "category": "CMDB Governance and Health",
     "type": "single",
-    "prompt": "A CMDB Administrator wants to remove all Linux Servers in the organization that have not been updated in six months.\nWhich recommended action does the Administrator take in Data Manages?\nR",
+    "prompt": "A CMDB Administrator wants to remove all Linux Servers in the organization that have not been updated in six months.\nWhich recommended action does the Administrator take in Data Manager?",
     "choices": [
       {
         "id": "A",
