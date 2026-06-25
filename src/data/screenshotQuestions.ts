@@ -1447,7 +1447,7 @@ export const screenshotQuestions: Question[] = [
     "number": 73,
     "category": "CMDB Governance and Health",
     "type": "single",
-    "prompt": "A CMDB Administrator identifies duplicate CIs. One was created by a manual import, and the other one was created by automated discovery. The discovered CI has the\nl210$1 IP address, while the manually imported CI has an accurate relationship to a critical business application,\nHow does the Administrator use the Duplicate CI Remediator to resolve this issue?",
+    "prompt": "A CMDB Administrator identifies duplicate CIs. One was created by a manual import, and the other one was created by automated discovery. The discovered CI has the\nlatest IP address, while the manually imported CI has an accurate relationship to a critical business application,\nHow does the Administrator use the Duplicate CI Remediator to resolve this issue?",
     "choices": [
       {
         "id": "A",

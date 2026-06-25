@@ -94,4 +94,10 @@ describe('question presentation data', () => {
     expect(question?.prompt).toContain('A CMDB Administrator is asked to clean up')
     expect(question?.prompt).not.toContain('asked 10 clean up')
   })
+
+  it('uses corrected Question 73 latest IP address wording', () => {
+    const question = questions.find((item) => item.id === 'source-t3-004')
+    expect(question?.prompt).toContain('latest IP address')
+    expect(question?.prompt).not.toContain('l210$1 IP address')
+  })
 })
