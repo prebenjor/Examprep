@@ -4863,7 +4863,7 @@ export const screenshotQuestions: Question[] = [
     "number": 185,
     "category": "CSDM Fundamentals",
     "type": "multiple",
-    "prompt": "\u00a7\nA CMDB Manager wants to start adding CSDM design and planning (design) domain components into the CMDB.\nWho is involved in this exercise? (Choose two.)",
+    "prompt": "A CMDB Manager wants to start adding CSDM design and planning (design) domain components into the CMDB.\nWho is involved in this exercise? (Choose two.)",
     "choices": [
       {
         "id": "A",
@@ -4879,7 +4879,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "D",
-        "text": "Application Qwner x"
+        "text": "Application Owner"
       }
     ],
     "correctAnswers": [

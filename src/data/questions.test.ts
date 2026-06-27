@@ -379,4 +379,13 @@ describe('question presentation data', () => {
     ]))
     expect(question?.correctAnswers).toEqual(['C'])
   })
+
+  it('uses corrected Question 185 prompt and Application Owner choice', () => {
+    const question = questions.find((item) => item.id === 'source-t5-033')
+    expect(question?.prompt).not.toContain('\u00a7')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'D', text: 'Application Owner' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['B', 'D'])
+  })
 })
