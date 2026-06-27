@@ -86,7 +86,7 @@ const matchingPrompts: Record<string, string> = {
   'source-t5-016':
     'A CMDB Owner starts on the CSDM journey and needs to become familiar with the CSDM domains.\nDrag the CMDB objects to the correct CSDM domains.',
   'source-t5-022':
-    'Match each service type to its definition.',
+    'Given a list of Service types in the platform. Drag the appropriate service to its definition.',
   'source-t5-023':
     'Match each CSDM domain to the roles that make up its governance team.',
   'source-t5-024':

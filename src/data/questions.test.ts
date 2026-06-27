@@ -289,4 +289,28 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('preserves Question 174 service type matching source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t5-022')
+    expect(question?.prompt).toBe(
+      'Given a list of Service types in the platform. Drag the appropriate service to its definition.',
+    )
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'Application Service',
+        target: 'Logical representation of a deploy system or application stack.',
+      },
+      {
+        id: 'M2',
+        item: 'Technology Management Service (Technical Service)',
+        target: 'Published to Service Owners and underpins one or more business or application Services.',
+      },
+      {
+        id: 'M3',
+        item: 'Business Service',
+        target: 'Published to Business Users and underpins one or more business capabilities.',
+      },
+    ])
+  })
 })

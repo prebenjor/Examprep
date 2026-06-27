@@ -4533,6 +4533,23 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "Application Service",
+        "target": "Logical representation of a deploy system or application stack."
+      },
+      {
+        "id": "M2",
+        "item": "Technology Management Service (Technical Service)",
+        "target": "Published to Service Owners and underpins one or more business or application Services."
+      },
+      {
+        "id": "M3",
+        "item": "Business Service",
+        "target": "Published to Business Users and underpins one or more business capabilities."
+      }
+    ],
     "explanation": "Source answer: Application Service: logical deployed stack; Technology Management Service / Technical Service: published to service owners and underpins services; Business Service: published to business users and underpins capabilities.",
     "image": "questions/image12.png",
     "needsReview": false
