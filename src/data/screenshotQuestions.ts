@@ -4840,7 +4840,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "Affected CIs in the Incident record\n\n. Ce . 3"
+        "text": "Affected CIs in the Incident record"
       },
       {
         "id": "C",

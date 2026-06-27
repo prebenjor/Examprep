@@ -371,4 +371,12 @@ describe('question presentation data', () => {
     ])
     expect(question?.correctAnswers).toEqual(['C'])
   })
+
+  it('removes OCR debris from Question 184 option B', () => {
+    const question = questions.find((item) => item.id === 'source-t5-032')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'B', text: 'Affected CIs in the Incident record' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
 })
