@@ -1066,7 +1066,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "Arty updates for the SCCM Seqvice Graph Connector will be sipped during the upgrade"
+        "text": "Any updates for the SCCM Service Graph Connector will be skipped during the upgrade"
       },
       {
         "id": "C",

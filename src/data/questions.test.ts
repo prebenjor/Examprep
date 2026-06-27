@@ -3,6 +3,17 @@ import { questions } from './questions'
 import { getMatchPairs } from '../lib/quiz'
 
 describe('question presentation data', () => {
+  it('uses corrected Question 60 SCCM upgrade wording', () => {
+    const question = questions.find((item) => item.id === 'source-t2-022')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      {
+        id: 'B',
+        text: 'Any updates for the SCCM Service Graph Connector will be skipped during the upgrade',
+      },
+    ]))
+    expect(question?.correctAnswers).toEqual(['B'])
+  })
+
   it('contains 192 text-first questions', () => {
     expect(questions).toHaveLength(192)
     expect(questions.every((question) => question.prompt.trim().length > 0)).toBe(true)
