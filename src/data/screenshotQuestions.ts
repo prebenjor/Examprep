@@ -4957,7 +4957,7 @@ export const screenshotQuestions: Question[] = [
     "number": 188,
     "category": "CSDM Fundamentals",
     "type": "single",
-    "prompt": "\u00a7\nA Configuration Manager is implementing end to end service modeling and wants to get help on status and playbooks for improving the quality.\nWhat does the Configuration Manager reference to obtain guidance?",
+    "prompt": "A Configuration Manager is implementing end to end service modeling and wants to get help on status and playbooks for improving the quality.\nWhat does the Configuration Manager reference to obtain guidance?",
     "choices": [
       {
         "id": "A",
@@ -4973,7 +4973,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "D",
-        "text": "CMDB Workspace\n\nk"
+        "text": "CMDB Workspace"
       }
     ],
     "correctAnswers": [

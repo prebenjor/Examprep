@@ -388,4 +388,13 @@ describe('question presentation data', () => {
     ]))
     expect(question?.correctAnswers).toEqual(['B', 'D'])
   })
+
+  it('removes OCR debris from Question 188 prompt and option D', () => {
+    const question = questions.find((item) => item.id === 'source-t5-036')
+    expect(question?.prompt).not.toContain('\u00a7')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'D', text: 'CMDB Workspace' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
 })
