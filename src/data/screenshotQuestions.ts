@@ -4673,7 +4673,7 @@ export const screenshotQuestions: Question[] = [
     "number": 179,
     "category": "CSDM Fundamentals",
     "type": "single",
-    "prompt": "\u00a7\nA hospital has received a new CT Scanner. The inventory management team has created a catalog item doctors can use to schedule patients for scans.\nWhat CSOM domain should the inventory management team map the catalog item to?",
+    "prompt": "A hospital has received a new CT Scanner. The inventory management team has created a catalog item doctors can use to schedule patients for scans.\nWhat CSDM domain should the inventory management team map the catalog item to?",
     "choices": [
       {
         "id": "A",
@@ -4689,7 +4689,11 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "D",
-        "text": "Service Consumption (Sell/Consume)\nAE. Build and Integration (Build)"
+        "text": "Service Consumption (Sell/Consume)"
+      },
+      {
+        "id": "E",
+        "text": "Build and Integration (Build)"
       }
     ],
     "correctAnswers": [

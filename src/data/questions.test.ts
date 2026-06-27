@@ -342,4 +342,19 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('uses corrected Question 179 prompt and five separate choices', () => {
+    const question = questions.find((item) => item.id === 'source-t5-027')
+    expect(question?.prompt).toContain('What CSDM domain')
+    expect(question?.prompt).not.toContain('\u00a7')
+    expect(question?.prompt).not.toContain('CSOM')
+    expect(question?.choices).toEqual([
+      { id: 'A', text: 'Foundation' },
+      { id: 'B', text: 'Design and Planning (Design)' },
+      { id: 'C', text: 'Service Delivery (Manage Technical Service)' },
+      { id: 'D', text: 'Service Consumption (Sell/Consume)' },
+      { id: 'E', text: 'Build and Integration (Build)' },
+    ])
+    expect(question?.correctAnswers).toEqual(['D'])
+  })
 })
