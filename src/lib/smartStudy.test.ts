@@ -20,6 +20,7 @@ const attempt = (
   selectedAnswers: string[],
   completedAt: string,
   marked = false,
+  incorrectlySubmitted = false,
 ): Attempt => ({
   id,
   mode: 'practice',
@@ -29,6 +30,7 @@ const attempt = (
   questionIds: [questionId],
   answers: [{ questionId, selectedAnswers }],
   markedQuestionIds: marked ? [questionId] : [],
+  incorrectlySubmittedQuestionIds: incorrectlySubmitted ? [questionId] : [],
   score: selectedAnswers[0] === 'A' ? 100 : 0,
   correct: selectedAnswers[0] === 'A' ? 1 : 0,
   incorrect: selectedAnswers.length && selectedAnswers[0] !== 'A' ? 1 : 0,
@@ -66,6 +68,35 @@ describe('Smart Study ranking', () => {
     expect(history.markedForReview).toBe(true)
     expect(history.priorityReason).toContain('Missed 2 times')
     expect(history.priorityReason).toContain('marked for review')
+  })
+
+  it('keeps a question due after an earlier wrong attempt is corrected', () => {
+    const bank = [question('wrong-now'), question('corrected'), question('unseen'), question('clean-correct')]
+    const state = stateWith(
+      attempt('a1', 'corrected', ['B'], '2026-06-07T10:00:00.000Z'),
+      attempt('a2', 'corrected', ['A'], '2026-06-09T10:00:00.000Z'),
+      attempt('a3', 'wrong-now', ['B'], '2026-06-09T10:00:00.000Z'),
+      attempt('a4', 'clean-correct', ['A'], '2026-06-09T10:00:00.000Z'),
+    )
+
+    const ranked = rankQuestions(bank, state, now, () => 0.5)
+    expect(ranked.map(({ question: item }) => item.id))
+      .toEqual(['wrong-now', 'corrected', 'unseen', 'clean-correct'])
+    expect(ranked.find(({ question: item }) => item.id === 'corrected')?.history.priorityReason)
+      .toBe('Corrected after a previous miss')
+  })
+
+  it('retains a wrong check that was corrected in the same session', () => {
+    const item = question('q1')
+    const history = buildQuestionHistory(
+      item,
+      stateWith(attempt('a1', 'q1', ['A'], '2026-06-09T10:00:00.000Z', false, true)),
+      now,
+    )
+
+    expect(history.latestResult).toBe('correct')
+    expect(history.priority).toBeGreaterThan(400)
+    expect(history.priorityReason).toBe('Corrected after a previous miss')
   })
 
   it('clears the review boost after a newer unmarked attempt', () => {

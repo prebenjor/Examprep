@@ -20,6 +20,7 @@ interface Session {
   secondsLeft: number | null
   submitted: string[]
   markedForReview: string[]
+  incorrectlySubmittedQuestionIds: string[]
 }
 
 interface ConfirmState {
@@ -44,6 +45,7 @@ const initialSession = (mode: Session['mode'], sessionQuestions: Question[], tim
   secondsLeft: timer,
   submitted: [],
   markedForReview: [],
+  incorrectlySubmittedQuestionIds: [],
 })
 
 function App() {
@@ -147,7 +149,14 @@ function App() {
     if (!session) return
     const question = session.questions[session.index]
     if (!(session.answers[question.id]?.length > 0)) return
-    setSession({ ...session, submitted: [...session.submitted, question.id] })
+    const incorrect = !isCorrect(question, session.answers[question.id])
+    setSession({
+      ...session,
+      submitted: [...session.submitted, question.id],
+      incorrectlySubmittedQuestionIds: incorrect
+        ? [...new Set([...session.incorrectlySubmittedQuestionIds, question.id])]
+        : session.incorrectlySubmittedQuestionIds,
+    })
   }
 
   const changePracticeAnswer = (questionId: string) => {
@@ -199,6 +208,7 @@ function App() {
       questionIds: session.questions.map((question) => question.id),
       answers: answerList,
       markedQuestionIds: session.markedForReview,
+      incorrectlySubmittedQuestionIds: session.incorrectlySubmittedQuestionIds,
       ...scored,
     }
     setState((current) => ({

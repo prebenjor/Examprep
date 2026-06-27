@@ -39,6 +39,7 @@ export interface Attempt {
   questionIds: string[]
   answers: AttemptAnswer[]
   markedQuestionIds?: string[]
+  incorrectlySubmittedQuestionIds?: string[]
   score: number
   correct: number
   incorrect: number

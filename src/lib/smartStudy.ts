@@ -22,12 +22,17 @@ export function buildQuestionHistory(
         completedAt: attempt.completedAt,
         result,
         marked: attempt.markedQuestionIds?.includes(question.id) ?? false,
+        incorrectlySubmitted: attempt.incorrectlySubmittedQuestionIds?.includes(question.id) ?? false,
       }
     })
     .sort((left, right) => Date.parse(right.completedAt) - Date.parse(left.completedAt))
 
   const correct = records.filter((record) => record.result === 'correct').length
   const incorrect = records.filter((record) => record.result === 'incorrect').length
+  const correctedMisses = records.filter(
+    (record) => record.result === 'correct' && record.incorrectlySubmitted,
+  ).length
+  const historicalMisses = incorrect + correctedMisses
   const unanswered = records.filter((record) => record.result === 'unanswered').length
   const latest = records[0]
   const latestResult = latest?.result ?? 'unseen'
@@ -46,8 +51,15 @@ export function buildQuestionHistory(
     priority = 850 + Math.min(unanswered * 25, 125) + Math.min(daysSince, 30)
     priorityReason = 'Left unanswered'
   } else if (latestResult === 'correct') {
-    priority = 100 + Math.min(daysSince * 8, 240) + Math.min(incorrect * 15, 90)
-    priorityReason = daysSince >= 14 ? `Last studied ${daysSince} days ago` : 'Recently answered correctly'
+    if (historicalMisses > 0) {
+      priority = 700 + Math.min(historicalMisses * 35, 210) + Math.min(daysSince * 4, 120)
+      priorityReason = historicalMisses > 1
+        ? `Corrected after ${historicalMisses} previous misses`
+        : 'Corrected after a previous miss'
+    } else {
+      priority = 100 + Math.min(daysSince * 8, 240)
+      priorityReason = daysSince >= 14 ? `Last studied ${daysSince} days ago` : 'Recently answered correctly'
+    }
   }
 
   if (markedForReview) {

@@ -64,6 +64,7 @@ function isAttempt(value: unknown): value is Attempt {
       isStringArray(answer.selectedAnswers),
     ) &&
     (attempt.markedQuestionIds === undefined || isStringArray(attempt.markedQuestionIds)) &&
+    (attempt.incorrectlySubmittedQuestionIds === undefined || isStringArray(attempt.incorrectlySubmittedQuestionIds)) &&
     isFiniteNumber(attempt.score) &&
     isFiniteNumber(attempt.correct) &&
     isFiniteNumber(attempt.incorrect) &&
