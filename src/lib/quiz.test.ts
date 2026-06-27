@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './quiz'
+import { getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './quiz'
 import type { Question } from '../types'
 
 const bank: Question[] = [
@@ -72,5 +72,16 @@ describe('quiz scoring', () => {
     const shuffled = shuffleQuestions(bank, () => 0)
     expect(shuffled.map((item) => item.id).sort()).toEqual(['many', 'match', 'one'])
     expect(new Set(shuffled.map((item) => item.id)).size).toBe(bank.length)
+  })
+
+  it('randomizes answer order without changing IDs or scoring', () => {
+    const shuffled = shuffleAnswerChoices(bank[1], () => 0)
+    expect(shuffled.choices.map((choice) => choice.id)).toEqual(['B', 'C', 'A'])
+    expect(shuffled.choices).not.toBe(bank[1].choices)
+    expect(isCorrect(shuffled, ['C', 'A'])).toBe(true)
+  })
+
+  it('leaves matching pair order to the matching board', () => {
+    expect(shuffleAnswerChoices(bank[2], () => 0)).toBe(bank[2])
   })
 })

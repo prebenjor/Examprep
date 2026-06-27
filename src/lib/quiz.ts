@@ -64,6 +64,11 @@ export function shuffleQuestions<T>(items: T[], random = Math.random): T[] {
   return copy
 }
 
+export function shuffleAnswerChoices(question: Question, random = Math.random): Question {
+  if (question.type === 'matching') return question
+  return { ...question, choices: shuffleQuestions(question.choices, random) }
+}
+
 export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainder = seconds % 60

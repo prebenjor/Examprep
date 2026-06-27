@@ -3,7 +3,7 @@ import './App.css'
 import { AppShell, ConfirmDialog, Icon, Notice, type PrimaryDestination } from './components/AppShell'
 import { questions } from './data/questions'
 import { createBackup, mergeStates, parseBackup } from './lib/backup'
-import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleQuestions } from './lib/quiz'
+import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './lib/quiz'
 import { buildQuestionHistory, rankQuestions, selectSmartStudyQuestions } from './lib/smartStudy'
 import { clearState, loadState, PASSING_SCORE, saveState, STATE_VERSION } from './lib/storage'
 import { buildPracticeOrder, buildStudyOverview, defaultBrowseFilters, filterQuestions, type BrowseFilters } from './lib/studyViews'
@@ -38,7 +38,7 @@ interface NoticeState {
 
 const initialSession = (mode: Session['mode'], sessionQuestions: Question[], timer: number | null): Session => ({
   mode,
-  questions: sessionQuestions,
+  questions: sessionQuestions.map((question) => shuffleAnswerChoices(question)),
   answers: {},
   index: 0,
   startedAt: Date.now(),
