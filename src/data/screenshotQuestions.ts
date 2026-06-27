@@ -4325,6 +4325,28 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "Business Application",
+        "target": "Design and Planning domain"
+      },
+      {
+        "id": "M2",
+        "item": "Business Process",
+        "target": "Foundation domain"
+      },
+      {
+        "id": "M3",
+        "item": "Application Service",
+        "target": "Service Delivery domain"
+      },
+      {
+        "id": "M4",
+        "item": "Business Service",
+        "target": "Sell / Consume domain"
+      }
+    ],
     "explanation": "Source answer: Design and Planning: Business Application; Foundation: Business Process; Service Delivery: Application Service; Sell / Consume: Business Service.",
     "image": "questions/image51.png",
     "needsReview": true

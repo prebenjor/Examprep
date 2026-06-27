@@ -84,7 +84,7 @@ const matchingPrompts: Record<string, string> = {
   'source-t5-005':
     'Some steps need to be taken to transition from using different status attributes in the CMDB to life cycle objects.\nDrag and drop the objectives/attributes to the description.',
   'source-t5-016':
-    'Match each CMDB object to the correct CSDM domain.',
+    'A CMDB Owner starts on the CSDM journey and needs to become familiar with the CSDM domains.\nDrag the CMDB objects to the correct CSDM domains.',
   'source-t5-022':
     'Match each service type to its definition.',
   'source-t5-023':

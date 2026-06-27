@@ -260,4 +260,33 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('preserves Question 168 CSDM domain matching source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t5-016')
+    expect(question?.prompt).toBe(
+      'A CMDB Owner starts on the CSDM journey and needs to become familiar with the CSDM domains.\nDrag the CMDB objects to the correct CSDM domains.',
+    )
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'Business Application',
+        target: 'Design and Planning domain',
+      },
+      {
+        id: 'M2',
+        item: 'Business Process',
+        target: 'Foundation domain',
+      },
+      {
+        id: 'M3',
+        item: 'Application Service',
+        target: 'Service Delivery domain',
+      },
+      {
+        id: 'M4',
+        item: 'Business Service',
+        target: 'Sell / Consume domain',
+      },
+    ])
+  })
 })
