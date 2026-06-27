@@ -69,6 +69,11 @@ export function shuffleAnswerChoices(question: Question, random = Math.random): 
   return { ...question, choices: shuffleQuestions(question.choices, random) }
 }
 
+export function getExamSizeOptions(totalQuestions: number): number[] {
+  return [10, 25, 50, 60, 75, totalQuestions]
+    .filter((value, index, values) => value <= totalQuestions && values.indexOf(value) === index)
+}
+
 export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainder = seconds % 60

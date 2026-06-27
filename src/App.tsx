@@ -3,7 +3,7 @@ import './App.css'
 import { AppShell, ConfirmDialog, Icon, Notice, type PrimaryDestination } from './components/AppShell'
 import { questions } from './data/questions'
 import { createBackup, mergeStates, parseBackup } from './lib/backup'
-import { formatDuration, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './lib/quiz'
+import { formatDuration, getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './lib/quiz'
 import { buildQuestionHistory, rankQuestions, selectSmartStudyQuestions } from './lib/smartStudy'
 import { clearState, loadState, PASSING_SCORE, saveState, STATE_VERSION } from './lib/storage'
 import { buildPracticeOrder, buildStudyOverview, defaultBrowseFilters, filterQuestions, type BrowseFilters } from './lib/studyViews'
@@ -874,7 +874,7 @@ function ExamSetup({ size, timed, passingScore, onSize, onTimed, onStart, onCanc
   onStart: () => void
   onCancel: () => void
 }) {
-  const sizes = [10, 25, 50, 60, questions.length].filter((value, index, list) => value <= questions.length && list.indexOf(value) === index)
+  const sizes = getExamSizeOptions(questions.length)
   return (
     <div className="page narrow-page">
       <button className="back-button" onClick={onCancel}>← Dashboard</button>

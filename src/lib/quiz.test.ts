@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './quiz'
+import { getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './quiz'
 import type { Question } from '../types'
 
 const bank: Question[] = [
@@ -83,5 +83,10 @@ describe('quiz scoring', () => {
 
   it('leaves matching pair order to the matching board', () => {
     expect(shuffleAnswerChoices(bank[2], () => 0)).toBe(bank[2])
+  })
+
+  it('offers a 75-question mock exam without duplicating the all option', () => {
+    expect(getExamSizeOptions(192)).toEqual([10, 25, 50, 60, 75, 192])
+    expect(getExamSizeOptions(75)).toEqual([10, 25, 50, 60, 75])
   })
 })
