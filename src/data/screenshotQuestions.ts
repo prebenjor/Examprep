@@ -1230,7 +1230,7 @@ export const screenshotQuestions: Question[] = [
     "number": 66,
     "category": "Data Ingestion and IRE",
     "type": "single",
-    "prompt": "A CMDB Administrator wants 10 leverage dynamic reconciliation rules.\nWhich feature must be enabled?",
+    "prompt": "A CMDB Administrator wants to leverage dynamic reconciliation rules. Which feature must be enabled?",
     "choices": [
       {
         "id": "A",
@@ -1238,11 +1238,15 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "CMDB 350/Multisource CMDB"
+        "text": "CMDB 360/Multisource CMDB"
       },
       {
         "id": "C",
-        "text": "CMDB Workspace\n\n0. Reconciliation Rules x"
+        "text": "CMDB Workspace"
+      },
+      {
+        "id": "D",
+        "text": "Reconciliation rules"
       }
     ],
     "correctAnswers": [

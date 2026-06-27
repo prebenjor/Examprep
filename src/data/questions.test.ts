@@ -3,6 +3,20 @@ import { questions } from './questions'
 import { getMatchPairs } from '../lib/quiz'
 
 describe('question presentation data', () => {
+  it('uses corrected Question 66 prompt and four separate choices', () => {
+    const question = questions.find((item) => item.id === 'source-t2-028')
+    expect(question?.prompt).toBe(
+      'A CMDB Administrator wants to leverage dynamic reconciliation rules. Which feature must be enabled?',
+    )
+    expect(question?.choices).toEqual([
+      { id: 'A', text: 'CMDB Data Manager' },
+      { id: 'B', text: 'CMDB 360/Multisource CMDB' },
+      { id: 'C', text: 'CMDB Workspace' },
+      { id: 'D', text: 'Reconciliation rules' },
+    ])
+    expect(question?.correctAnswers).toEqual(['B'])
+  })
+
   it('uses corrected Question 150 spacing in every choice', () => {
     const question = questions.find((item) => item.id === 'source-t4-023')
     expect(question?.choices).toEqual([
