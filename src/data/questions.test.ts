@@ -313,4 +313,33 @@ describe('question presentation data', () => {
       },
     ])
   })
+
+  it('preserves Question 176 CSDM benefit matching source wording', () => {
+    const question = questions.find((item) => item.id === 'source-t5-024')
+    expect(question?.prompt).toBe(
+      'An Enterprise Architect needs to help the CMDB owner understand the benefits of CSDM.\nDrag the CSDM domains to the respective benefits.',
+    )
+    expect(question?.matchPairs).toEqual([
+      {
+        id: 'M1',
+        item: 'Design and Planning',
+        target: 'Understand CIs related to business application and related capabilities to identify redundancies, monitor costs and make better investment decisions around roadmap',
+      },
+      {
+        id: 'M2',
+        item: 'Service Delivery',
+        target: 'Understand technical services, technical service offerings, service support and all relationships to underlying technology CIs',
+      },
+      {
+        id: 'M3',
+        item: 'Service Consumption',
+        target: 'Understand business services and ownership, cost, scope of what is offered to the business/consumer and request access to the business services',
+      },
+      {
+        id: 'M4',
+        item: 'Foundation',
+        target: 'Use the base system tables when implementing the CSDM to derive the highest value from ServiceNow products and the Now Platform',
+      },
+    ])
+  })
 })

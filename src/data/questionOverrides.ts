@@ -90,7 +90,7 @@ const matchingPrompts: Record<string, string> = {
   'source-t5-023':
     'Match each CSDM domain to the roles that make up its governance team.',
   'source-t5-024':
-    'Match each CSDM domain to the business benefit it provides.',
+    'An Enterprise Architect needs to help the CMDB owner understand the benefits of CSDM.\nDrag the CSDM domains to the respective benefits.',
 }
 
 export function applyQuestionOverrides(question: Question): Question {

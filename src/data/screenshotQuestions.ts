@@ -4588,6 +4588,28 @@ export const screenshotQuestions: Question[] = [
     "correctAnswers": [
       "REVEAL"
     ],
+    "matchPairs": [
+      {
+        "id": "M1",
+        "item": "Design and Planning",
+        "target": "Understand CIs related to business application and related capabilities to identify redundancies, monitor costs and make better investment decisions around roadmap"
+      },
+      {
+        "id": "M2",
+        "item": "Service Delivery",
+        "target": "Understand technical services, technical service offerings, service support and all relationships to underlying technology CIs"
+      },
+      {
+        "id": "M3",
+        "item": "Service Consumption",
+        "target": "Understand business services and ownership, cost, scope of what is offered to the business/consumer and request access to the business services"
+      },
+      {
+        "id": "M4",
+        "item": "Foundation",
+        "target": "Use the base system tables when implementing the CSDM to derive the highest value from ServiceNow products and the Now Platform"
+      }
+    ],
     "explanation": "Source answer: Design and Planning: understand applications, capabilities, redundancy, cost, and roadmaps; Service Delivery: understand technical services, offerings, support, and underlying CIs; Service Consumption: understand business services, ownership, cost, scope, and access; Foundation: use base-system CSDM tables.",
     "image": "questions/image157.png",
     "needsReview": false
