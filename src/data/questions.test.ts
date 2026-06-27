@@ -357,4 +357,18 @@ describe('question presentation data', () => {
     ])
     expect(question?.correctAnswers).toEqual(['D'])
   })
+
+  it('uses corrected Question 180 CSDM prompt and clean choices', () => {
+    const question = questions.find((item) => item.id === 'source-t5-028')
+    expect(question?.prompt).toContain('CSDM Data Foundation Dashboard')
+    expect(question?.prompt).not.toContain('\u00a7')
+    expect(question?.prompt).not.toContain('CSOM')
+    expect(question?.choices).toEqual([
+      { id: 'A', text: 'Crawl' },
+      { id: 'B', text: 'Run' },
+      { id: 'C', text: 'Walk' },
+      { id: 'D', text: 'Fly' },
+    ])
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
 })

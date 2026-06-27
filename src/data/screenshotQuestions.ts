@@ -4708,7 +4708,7 @@ export const screenshotQuestions: Question[] = [
     "number": 180,
     "category": "CSDM Fundamentals",
     "type": "single",
-    "prompt": "\u00a7\nA CSDM Data Manager needs metrics on the alignment of Technology Management Services (Technical Services) and Technology Management Offerings (Technical\nService Offerings) with best practices.\nWhich tab in the CSOM Data Foundation Dashboard provides this information?",
+    "prompt": "A CSDM Data Manager needs metrics on the alignment of Technology Management Services (Technical Services) and Technology Management Offerings (Technical\nService Offerings) with best practices.\nWhich tab in the CSDM Data Foundation Dashboard provides this information?",
     "choices": [
       {
         "id": "A",
@@ -4716,7 +4716,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "Run\nL"
+        "text": "Run"
       },
       {
         "id": "C",
