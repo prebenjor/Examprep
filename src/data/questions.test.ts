@@ -3,6 +3,17 @@ import { questions } from './questions'
 import { getMatchPairs } from '../lib/quiz'
 
 describe('question presentation data', () => {
+  it('removes OCR debris from Question 161 option B', () => {
+    const question = questions.find((item) => item.id === 'source-t5-009')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      {
+        id: 'B',
+        text: 'It provides actionable insights to improve data quality and completeness.',
+      },
+    ]))
+    expect(question?.correctAnswers).toEqual(['A', 'B'])
+  })
+
   it('uses corrected Question 66 prompt and four separate choices', () => {
     const question = questions.find((item) => item.id === 'source-t2-028')
     expect(question?.prompt).toBe(

@@ -4110,7 +4110,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "It provides actionable insights to improve data quality and completeness.\n\n_ . ["
+        "text": "It provides actionable insights to improve data quality and completeness."
       },
       {
         "id": "C",
