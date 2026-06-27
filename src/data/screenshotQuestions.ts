@@ -3761,19 +3761,19 @@ export const screenshotQuestions: Question[] = [
     "choices": [
       {
         "id": "A",
-        "text": "Itis a free application on the ServiceNow Innovation Lab."
+        "text": "It is a free application on the ServiceNow Innovation Lab."
       },
       {
         "id": "B",
-        "text": "Itis active by default."
+        "text": "It is active by default."
       },
       {
         "id": "C",
-        "text": "Itis a free application on the ServiceNow Store."
+        "text": "It is a free application on the ServiceNow Store."
       },
       {
         "id": "D",
-        "text": "Itis a paid application on the ServiceNow Store. N"
+        "text": "It is a paid application on the ServiceNow Store."
       }
     ],
     "correctAnswers": [

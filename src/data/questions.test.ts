@@ -3,6 +3,17 @@ import { questions } from './questions'
 import { getMatchPairs } from '../lib/quiz'
 
 describe('question presentation data', () => {
+  it('uses corrected Question 150 spacing in every choice', () => {
+    const question = questions.find((item) => item.id === 'source-t4-023')
+    expect(question?.choices).toEqual([
+      { id: 'A', text: 'It is a free application on the ServiceNow Innovation Lab.' },
+      { id: 'B', text: 'It is active by default.' },
+      { id: 'C', text: 'It is a free application on the ServiceNow Store.' },
+      { id: 'D', text: 'It is a paid application on the ServiceNow Store.' },
+    ])
+    expect(question?.correctAnswers).toEqual(['C'])
+  })
+
   it('uses corrected Question 103 governance benefit choices', () => {
     const question = questions.find((item) => item.id === 'source-t3-034')
     expect(question?.choices).toEqual(expect.arrayContaining([
