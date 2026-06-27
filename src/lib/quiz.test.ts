@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './quiz'
+import { getChoiceLabel, getCorrectChoiceText, getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './quiz'
 import type { Question } from '../types'
 
 const bank: Question[] = [
@@ -88,5 +88,12 @@ describe('quiz scoring', () => {
   it('offers a 75-question mock exam without duplicating the all option', () => {
     expect(getExamSizeOptions(192)).toEqual([10, 25, 50, 60, 75, 192])
     expect(getExamSizeOptions(75)).toEqual([10, 25, 50, 60, 75])
+  })
+
+  it('uses positional display labels while retaining shuffled answer IDs', () => {
+    const shuffled = shuffleAnswerChoices(bank[1], () => 0)
+    expect(shuffled.choices.map((_, index) => getChoiceLabel(index))).toEqual(['A', 'B', 'C'])
+    expect(shuffled.choices.map((choice) => choice.id)).toEqual(['B', 'C', 'A'])
+    expect(getCorrectChoiceText(shuffled)).toBe('A; C')
   })
 })

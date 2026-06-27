@@ -2338,7 +2338,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "B",
-        "text": "Gain visibdty and control"
+        "text": "Gain visibility and control"
       },
       {
         "id": "C",
@@ -2346,7 +2346,7 @@ export const screenshotQuestions: Question[] = [
       },
       {
         "id": "D",
-        "text": "Enhanced Service Management operations N"
+        "text": "Enhanced Service Management operations"
       }
     ],
     "correctAnswers": [

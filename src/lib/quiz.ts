@@ -74,6 +74,17 @@ export function getExamSizeOptions(totalQuestions: number): number[] {
     .filter((value, index, values) => value <= totalQuestions && values.indexOf(value) === index)
 }
 
+export function getChoiceLabel(index: number): string {
+  return String.fromCharCode(65 + index)
+}
+
+export function getCorrectChoiceText(question: Question): string {
+  return question.correctAnswers
+    .map((id) => question.choices.find((choice) => choice.id === id)?.text)
+    .filter(Boolean)
+    .join('; ')
+}
+
 export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainder = seconds % 60

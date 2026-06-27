@@ -3,7 +3,7 @@ import './App.css'
 import { AppShell, ConfirmDialog, Icon, Notice, type PrimaryDestination } from './components/AppShell'
 import { questions } from './data/questions'
 import { createBackup, mergeStates, parseBackup } from './lib/backup'
-import { formatDuration, getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './lib/quiz'
+import { formatDuration, getChoiceLabel, getCorrectChoiceText, getExamSizeOptions, getMatchPairs, isCorrect, scoreQuestions, shuffleAnswerChoices, shuffleQuestions } from './lib/quiz'
 import { buildQuestionHistory, rankQuestions, selectSmartStudyQuestions } from './lib/smartStudy'
 import { clearState, loadState, PASSING_SCORE, saveState, STATE_VERSION } from './lib/storage'
 import { buildPracticeOrder, buildStudyOverview, defaultBrowseFilters, filterQuestions, type BrowseFilters } from './lib/studyViews'
@@ -1029,7 +1029,7 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
               onChange={(answers) => onSetAnswers(question, answers)}
             />
           ) : <div className="answers">
-            {question.choices.map((choice) => {
+            {question.choices.map((choice, index) => {
               const chosen = selected.includes(choice.id)
               const revealCorrect = submitted && question.correctAnswers.includes(choice.id)
               const revealWrong = submitted && chosen && !question.correctAnswers.includes(choice.id)
@@ -1040,8 +1040,8 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
                   onClick={() => onAnswer(question, choice.id)}
                   disabled={submitted}
                 >
-                  <span className="choice-letter">{choice.id}</span><span>{choice.text}</span>
-                  {!submitted && <kbd>{question.choices.indexOf(choice) + 1}</kbd>}
+                  <span className="choice-letter">{getChoiceLabel(index)}</span><span>{choice.text}</span>
+                  {!submitted && <kbd>{index + 1}</kbd>}
                   {revealCorrect && <Icon name="check" />}{revealWrong && <b>×</b>}
                 </button>
               )
@@ -1057,7 +1057,9 @@ function QuizScreen({ session, bookmarks, questionHistory, onAnswer, onSetAnswer
           {submitted && (
             <div className={`feedback ${correct ? 'good' : 'bad'}`}>
               <strong>{correct ? 'Correct' : 'Not quite'}</strong>
-              <p>{question.explanation}</p>
+              {matchPairs.length
+                ? <p>{question.explanation}</p>
+                : <p>Correct answer{question.correctAnswers.length > 1 ? 's' : ''}: {getCorrectChoiceText(question)}</p>}
             </div>
           )}
         </article>

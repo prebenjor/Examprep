@@ -3,6 +3,15 @@ import { questions } from './questions'
 import { getMatchPairs } from '../lib/quiz'
 
 describe('question presentation data', () => {
+  it('uses corrected Question 103 governance benefit choices', () => {
+    const question = questions.find((item) => item.id === 'source-t3-034')
+    expect(question?.choices).toEqual(expect.arrayContaining([
+      { id: 'B', text: 'Gain visibility and control' },
+      { id: 'D', text: 'Enhanced Service Management operations' },
+    ]))
+    expect(question?.correctAnswers).toEqual(['B', 'D'])
+  })
+
   it('uses corrected Question 60 SCCM upgrade wording', () => {
     const question = questions.find((item) => item.id === 'source-t2-022')
     expect(question?.choices).toEqual(expect.arrayContaining([
